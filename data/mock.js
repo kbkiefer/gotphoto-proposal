@@ -12,6 +12,7 @@ export const PHOTOGRAPHER = {
   theme: {
     accent: '#e85d04',       // ChoicePix orange
     accentLight: '#f4845f',
+    headerBg: '#1a1a2e',     // Brand bar background
   }
 };
 
@@ -409,6 +410,88 @@ export const GALLERY_JOBS = [
 
 // Backward-compatible PHOTOS — points to the active (newest) job's photos
 export const PHOTOS = GALLERY_JOBS[0].photos;
+
+// Detailed customer orders (richer than ORDERS)
+export const CUSTOMER_ORDERS = [
+  { id: 'co-001', orderNo: 42632, invoiceNo: 'FOO42113', date: '2026-03-12T14:23:00', firstName: 'Kevin', lastName: 'Kiefer', student: 'Angie Kiefer', jobId: 'gj-001', jobName: '2025-26 UDS Yearbook', group: '4th - Sandra Rodriguez', amount: 249, payment: 'paid', paymentMethod: 'apple_pay', status: 'Photos ready for download', package: 'Premium Print + Digital' },
+  { id: 'co-002', orderNo: 42631, invoiceNo: 'FOO42112', date: '2026-03-12T11:05:00', firstName: 'Maria', lastName: 'Rivera', student: 'Marcus Rivera', jobId: 'gj-001', jobName: '2025-26 UDS Yearbook', group: '4th - Sandra Rodriguez', amount: 199, payment: 'paid', paymentMethod: 'card', status: 'Basket processed', package: 'Digital Collection — All Photos' },
+  { id: 'co-003', orderNo: 42630, invoiceNo: 'FOO42111', date: '2026-03-11T16:42:00', firstName: 'Linda', lastName: 'Chen', student: 'Sofia Chen', jobId: 'gj-001', jobName: '2025-26 UDS Yearbook', group: '4th - Sandra Rodriguez', amount: 299, payment: 'paid', paymentMethod: 'google_pay', status: 'Order imported (Alkit)', package: 'Framed Collection' },
+  { id: 'co-004', orderNo: 42629, invoiceNo: 'FOO42110', date: '2026-03-11T09:18:00', firstName: 'James', lastName: 'Washington', student: 'Tyler Washington', jobId: 'gj-001', jobName: '2025-26 UDS Yearbook', group: '4th - Sandra Rodriguez', amount: 89, payment: 'paid', paymentMethod: 'card', status: 'Photos converted (Batch Shipping)', package: 'Essentials Print Package' },
+  { id: 'co-005', orderNo: 42628, invoiceNo: 'FOO42109', date: '2026-03-10T20:30:00', firstName: 'Rosa', lastName: 'Gutierrez', student: 'Emma Gutierrez', jobId: 'gj-001', jobName: '2025-26 UDS Yearbook', group: '4th - Sandra Rodriguez', amount: 175, payment: 'paid', paymentMethod: 'klarna', status: 'Basket processed', package: 'Canvas Portrait 16×20' },
+  { id: 'co-006', orderNo: 42627, invoiceNo: 'FOO42108', date: '2026-03-10T15:12:00', firstName: 'Carlos', lastName: 'Martinez', student: 'Jake Martinez', jobId: 'gj-001', jobName: '2025-26 UDS Yearbook', group: '4th - Sandra Rodriguez', amount: 249, payment: 'paid', paymentMethod: 'apple_pay', status: 'Photos ready for download', package: 'Premium Print + Digital' },
+  { id: 'co-007', orderNo: 42626, invoiceNo: 'FOO42107', date: '2026-03-09T12:45:00', firstName: 'Sarah', lastName: 'Thompson', student: 'Lily Thompson', jobId: 'gj-001', jobName: '2025-26 UDS Yearbook', group: '4th - Sandra Rodriguez', amount: 199, payment: 'paid', paymentMethod: 'card', status: 'Photos ready for download', package: 'Digital Collection — All Photos' },
+  { id: 'co-008', orderNo: 42625, invoiceNo: 'FOO42106', date: '2026-03-08T08:33:00', firstName: 'Miguel', lastName: 'Salazar', student: 'Diego Salazar', jobId: 'gj-001', jobName: '2025-26 UDS Yearbook', group: '4th - Sandra Rodriguez', amount: 45, payment: 'paid', paymentMethod: 'card', status: 'Basket processed', package: 'Wallet & Minis Pack' },
+  { id: 'co-009', orderNo: 42624, invoiceNo: 'FOO42105', date: '2026-03-07T17:20:00', firstName: 'Tran', lastName: 'Nguyen', student: 'Ava Nguyen', jobId: 'gj-001', jobName: '2025-26 UDS Yearbook', group: '4th - Sandra Rodriguez', amount: 89, payment: 'paid', paymentMethod: 'google_pay', status: 'Order imported (Alkit)', package: 'Essentials Print Package' },
+  { id: 'co-010', orderNo: 42623, invoiceNo: 'FOO42104', date: '2026-03-06T10:55:00', firstName: 'Patricia', lastName: 'Brown', student: 'Chris Brown', jobId: 'gj-001', jobName: '2025-26 UDS Yearbook', group: '4th - Sandra Rodriguez', amount: 249, payment: 'paid', paymentMethod: 'card', status: 'Photos converted (Batch Shipping)', package: 'Premium Print + Digital' },
+  { id: 'co-011', orderNo: 42622, invoiceNo: 'FOO42103', date: '2026-03-05T14:10:00', firstName: 'David', lastName: 'Garcia', student: 'Isabella Garcia', jobId: 'gj-001', jobName: '2025-26 UDS Yearbook', group: '4th - Sandra Rodriguez', amount: 175, payment: 'pending', paymentMethod: 'klarna', status: 'Awaiting payment', package: 'Canvas Portrait 16×20' },
+  { id: 'co-012', orderNo: 42621, invoiceNo: 'FOO42102', date: '2026-03-04T09:28:00', firstName: 'Jennifer', lastName: 'Lopez', student: 'Sofia Lopez', jobId: 'gj-001', jobName: '2025-26 UDS Yearbook', group: '4th - Sandra Rodriguez', amount: 45, payment: 'paid', paymentMethod: 'card', status: 'Basket processed', package: 'Wallet & Minis Pack' },
+];
+
+// Customer support requests / complaints
+export const CUSTOMER_REQUESTS = [
+  { id: 'req-001', orderNo: 42628, customer: 'Rosa Gutierrez', type: 'Shipping delay', status: 'open', created: '2026-03-11', modified: '2026-03-12', message: 'My order has been processing for 3 days. When will it ship?' },
+  { id: 'req-002', orderNo: 42625, customer: 'Miguel Salazar', type: 'Photos missing', status: 'open', created: '2026-03-10', modified: '2026-03-11', message: 'I only received 6 wallet prints but ordered 8. Two are missing from the set.' },
+  { id: 'req-003', orderNo: 42622, customer: 'David Garcia', type: 'Payment not registered', status: 'open', created: '2026-03-09', modified: '2026-03-10', message: 'I paid via Klarna 5 days ago but my order still shows as awaiting payment.' },
+  { id: 'req-004', orderNo: 42619, customer: 'Angela Torres', type: 'Cancellation request', status: 'pending', created: '2026-03-08', modified: '2026-03-09', message: 'I ordered the wrong package. Can I cancel and reorder the Premium package instead?' },
+  { id: 'req-005', orderNo: 42615, customer: 'Robert Kim', type: 'Ordered cards not delivered', status: 'closed', created: '2026-03-05', modified: '2026-03-08', message: 'Wallet cards never arrived. USPS shows delivered but I never received them.' },
+  { id: 'req-006', orderNo: 42610, customer: 'Maria Santos', type: 'Double payment', status: 'closed', created: '2026-03-03', modified: '2026-03-06', message: 'I was charged twice for my order. Please refund the duplicate charge.' },
+];
+
+// Batch shipping deadlines
+export const BATCH_SHIPPING = [
+  { id: 'bs-001', deadline: '2026-03-15', jobName: '2025-26 UDS Yearbook', internalName: '202526-UDSYB', orders: 23, active: true, status: 'collecting' },
+  { id: 'bs-002', deadline: '2026-03-20', jobName: '2025-26 Zachary Elementary', internalName: '202526-ZES', orders: 45, active: true, status: 'collecting' },
+  { id: 'bs-003', deadline: '2026-02-28', jobName: '2024-25 Spring Pictures', internalName: '202425-SP', orders: 18, active: false, status: 'sent' },
+  { id: 'bs-004', deadline: '2026-02-15', jobName: '2024-25 UDS Yearbook', internalName: '202425-UDSYB', orders: 31, active: false, status: 'sent' },
+];
+
+// Contacts — buyers and potential buyers
+export const CONTACTS = [
+  { id: 'ct-001', firstName: 'Kevin', lastName: 'Kiefer', email: 'kevin@shalaworks.com', role: 'Brother', status: 'buyer', students: ['Angie Kiefer'], orders: 3, totalSpent: 697, lastOrder: '2026-03-12', phone: '(956) 555-0199' },
+  { id: 'ct-002', firstName: 'Maria', lastName: 'Rivera', email: 'maria.rivera@email.com', role: 'Parent', status: 'buyer', students: ['Marcus Rivera'], orders: 2, totalSpent: 398, lastOrder: '2026-03-12', phone: '(956) 555-0201' },
+  { id: 'ct-003', firstName: 'Linda', lastName: 'Chen', email: 'linda.chen@email.com', role: 'Parent', status: 'buyer', students: ['Sofia Chen'], orders: 1, totalSpent: 299, lastOrder: '2026-03-11', phone: '(956) 555-0302' },
+  { id: 'ct-004', firstName: 'James', lastName: 'Washington', email: 'james.wash@email.com', role: 'Parent', status: 'buyer', students: ['Tyler Washington'], orders: 1, totalSpent: 89, lastOrder: '2026-03-11', phone: '(956) 555-0403' },
+  { id: 'ct-005', firstName: 'Rosa', lastName: 'Gutierrez', email: 'rosa.g@email.com', role: 'Parent', status: 'buyer', students: ['Emma Gutierrez'], orders: 1, totalSpent: 175, lastOrder: '2026-03-10', phone: '(956) 555-0504' },
+  { id: 'ct-006', firstName: 'Bert', lastName: 'Kiefer', email: 'bert@choicepix.com', role: 'Father', status: 'buyer', students: ['Angie Kiefer'], orders: 1, totalSpent: 249, lastOrder: '2026-03-06', phone: '(956) 555-0142' },
+  { id: 'ct-007', firstName: 'Patricia', lastName: 'Brown', email: 'patricia.b@email.com', role: 'Parent', status: 'potential', students: ['Chris Brown'], orders: 0, totalSpent: 0, lastOrder: null, phone: '(956) 555-0605' },
+  { id: 'ct-008', firstName: 'David', lastName: 'Garcia', email: 'david.garcia@email.com', role: 'Parent', status: 'potential', students: ['Isabella Garcia'], orders: 0, totalSpent: 0, lastOrder: null, phone: '(956) 555-0706' },
+  { id: 'ct-009', firstName: 'Jennifer', lastName: 'Lopez', email: 'jen.lopez@email.com', role: 'Parent', status: 'buyer', students: ['Sofia Lopez'], orders: 1, totalSpent: 45, lastOrder: '2026-03-04', phone: '(956) 555-0807' },
+  { id: 'ct-010', firstName: 'Angela', lastName: 'Torres', email: 'angela.t@email.com', role: 'Parent', status: 'buyer', students: ['Daniel Torres'], orders: 1, totalSpent: 199, lastOrder: '2026-03-02', phone: '(956) 555-0908' },
+];
+
+// Organizations (schools/institutions)
+export const ORGANIZATIONS = [
+  { id: 'org-001', name: 'United Day School', city: 'Laredo', state: 'TX', jobs: 4, subjects: 478, created: '2021-08-15' },
+  { id: 'org-002', name: 'Zachary Elementary', city: 'Laredo', state: 'TX', jobs: 1, subjects: 156, created: '2025-08-20' },
+  { id: 'org-003', name: 'Roosevelt Elementary', city: 'Laredo', state: 'TX', jobs: 1, subjects: 89, created: '2025-09-01' },
+];
+
+// Monthly stats for enhanced analytics
+export const MONTHLY_STATS = [
+  { month: 'Oct 2025', orders: 12, revenue: 2340, payments: 2100, refunds: 45, gpFee: 94, production: 312, shipping: 89 },
+  { month: 'Nov 2025', orders: 18, revenue: 4520, payments: 4200, refunds: 0, gpFee: 181, production: 567, shipping: 134 },
+  { month: 'Dec 2025', orders: 8, revenue: 1890, payments: 1650, refunds: 89, gpFee: 76, production: 234, shipping: 67 },
+  { month: 'Jan 2026', orders: 34, revenue: 8450, payments: 7800, refunds: 125, gpFee: 338, production: 1023, shipping: 289 },
+  { month: 'Feb 2026', orders: 41, revenue: 10230, payments: 9500, refunds: 0, gpFee: 409, production: 1289, shipping: 356 },
+  { month: 'Mar 2026', orders: 47, revenue: 12450, payments: 11200, refunds: 45, gpFee: 498, production: 1567, shipping: 412 },
+];
+
+// Vouchers / discount codes
+export const VOUCHERS = [
+  { id: 'v-001', name: 'Alexa Rodriguez', code: 'KM26', created: '2026-03-01', expires: '2026-04-30', value: 10, type: 'percent', usage: 1, redeemed: 0 },
+  { id: 'v-002', name: 'Spring Special', code: 'SPRING2026', created: '2026-02-15', expires: '2026-03-31', value: 15, type: 'dollar', usage: 50, redeemed: 12 },
+  { id: 'v-003', name: 'Teacher Appreciation', code: 'TEACHER10', created: '2026-01-10', expires: '2026-06-30', value: 20, type: 'percent', usage: 10, redeemed: 3 },
+  { id: 'v-004', name: 'VIP Parent', code: 'VIP25', created: '2025-12-01', expires: '2026-12-31', value: 25, type: 'dollar', usage: 5, redeemed: 2 },
+];
+
+// Per-job funnel data (keyed by gallery job id)
+export const JOB_FUNNELS = {
+  'gj-001': { accessCodes: 156, logins: 137, customers: 89, orders: 47, loginRate: 87.8, orderRate: 34.3 },
+  'gj-002': { accessCodes: 89, logins: 71, customers: 42, orders: 24, loginRate: 79.8, orderRate: 33.8 },
+  'gj-003': { accessCodes: 134, logins: 112, customers: 78, orders: 38, loginRate: 83.6, orderRate: 33.9 },
+  'gj-004': { accessCodes: 167, logins: 145, customers: 95, orders: 52, loginRate: 86.8, orderRate: 35.9 },
+  'gj-005': { accessCodes: 112, logins: 84, customers: 45, orders: 28, loginRate: 75.0, orderRate: 33.3 },
+};
 
 export function getPhotoUrl(fileOrId, job = null) {
   if (job) {

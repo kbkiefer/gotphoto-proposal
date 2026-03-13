@@ -2,7 +2,9 @@ import {
   PHOTOGRAPHER, JOBS, STUDENTS, CATEGORIES, PACKAGES, PHOTOS,
   getPhotoUrl, getPhotoThumb, ORDERS, ANALYTICS, CAMPAIGNS,
   AI_SUBJECT_LINES, NOTIFICATIONS,
-  GALLERY_JOBS, GOTPHOTO_DEFAULTS, getGroupPhotoUrl, CLIENT_ACCOUNTS
+  GALLERY_JOBS, GOTPHOTO_DEFAULTS, getGroupPhotoUrl, CLIENT_ACCOUNTS,
+  CUSTOMER_ORDERS, CUSTOMER_REQUESTS, BATCH_SHIPPING,
+  CONTACTS, ORGANIZATIONS, MONTHLY_STATS, VOUCHERS, JOB_FUNNELS
 } from '../data/mock.js';
 
 // ─── State ──────────────────────────────────────────────
@@ -13,6 +15,8 @@ let notificationsOpen = false;
 let selectedAiSubject = null;
 let expandedCampaignId = null;
 let sidebarOpen = false;
+let ordersTab = 'orders';
+let contactsTab = 'buyers';
 
 // ─── Navigation ─────────────────────────────────────────
 const SVG = {
@@ -40,11 +44,14 @@ const SVG = {
   hamburger: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>',
   camera: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>',
   star: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+  account: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
 };
 const NAV_ITEMS = [
   { id: 'dashboard',  icon: SVG.dashboard, label: 'Dashboard' },
   { id: 'jobs',       icon: SVG.jobs, label: 'Jobs' },
+  { id: 'orders',     icon: SVG.orders, label: 'Orders' },
   { id: 'packages',   icon: SVG.packages, label: 'Packages' },
+  { id: 'contacts',   icon: SVG.account, label: 'Contacts' },
   { id: 'analytics',  icon: SVG.analytics, label: 'Analytics' },
   { id: 'campaigns',  icon: SVG.campaigns, label: 'Campaigns' },
   { id: 'settings',   icon: SVG.settings, label: 'Settings' },
@@ -132,7 +139,9 @@ function navigate(page, detail) {
     dashboard: 'Dashboard',
     jobs: 'Jobs',
     jobDetail: 'Job Detail',
+    orders: 'Orders',
     packages: 'Package Manager',
+    contacts: 'Contacts',
     analytics: 'Analytics',
     campaigns: 'Campaigns',
     settings: 'Settings'
@@ -143,7 +152,9 @@ function navigate(page, detail) {
     case 'dashboard': renderDashboard(); break;
     case 'jobs': renderJobs(); break;
     case 'jobDetail': renderJobDetail(detail); break;
+    case 'orders': renderOrders(); break;
     case 'packages': renderPackages(); break;
+    case 'contacts': renderContacts(); break;
     case 'analytics': renderAnalytics(); break;
     case 'campaigns': renderCampaigns(); break;
     case 'settings': renderSettings(); break;
@@ -432,7 +443,7 @@ function renderDashboard() {
 
     <!-- Latest Jobs -->
     <div class="gp-section-title">Latest jobs</div>
-    <div class="gp-card">
+    <div class="gp-card section-gap">
       <div class="gp-tabs" id="dashJobTabs">
         <span class="gp-tab active" data-filter="active">Selling <span class="gp-tab-count">${sellingCount}</span></span>
         <span class="gp-tab" data-filter="archived">Archived <span class="gp-tab-count">${archivedCount}</span></span>
@@ -695,12 +706,288 @@ function renderJobs() {
   });
 }
 
+// ─── Page: Orders ───────────────────────────────────────
+function renderOrders() {
+  const content = document.getElementById('pageContent');
+  const openRequests = CUSTOMER_REQUESTS.filter(r => r.status === 'open').length;
+  const pendingRequests = CUSTOMER_REQUESTS.filter(r => r.status === 'pending').length;
+
+  content.innerHTML = `
+    <div class="orders-tabs">
+      <button class="orders-tab ${ordersTab === 'orders' ? 'active' : ''}" data-orders-tab="orders">
+        ${SVG.orders} Orders <span class="orders-tab-count">${CUSTOMER_ORDERS.length}</span>
+      </button>
+      <button class="orders-tab ${ordersTab === 'requests' ? 'active' : ''}" data-orders-tab="requests">
+        ${SVG.bell} Requests ${openRequests > 0 ? `<span class="orders-tab-count orders-tab-alert">${openRequests + pendingRequests}</span>` : ''}
+      </button>
+      <button class="orders-tab ${ordersTab === 'batch' ? 'active' : ''}" data-orders-tab="batch">
+        ${SVG.packages} Batch Shipping
+      </button>
+    </div>
+    <div id="ordersContent"></div>
+  `;
+
+  // Tab switching
+  content.querySelectorAll('[data-orders-tab]').forEach(tab => {
+    tab.addEventListener('click', () => {
+      ordersTab = tab.dataset.ordersTab;
+      renderOrders();
+    });
+  });
+
+  const inner = document.getElementById('ordersContent');
+
+  if (ordersTab === 'orders') {
+    renderOrdersList(inner);
+  } else if (ordersTab === 'requests') {
+    renderRequestsList(inner);
+  } else {
+    renderBatchList(inner);
+  }
+}
+
+function renderOrdersList(container) {
+  const paymentIcons = {
+    apple_pay: '\u{1F34E} Pay',
+    google_pay: 'G Pay',
+    card: '\u{1F4B3}',
+    klarna: 'Klarna',
+  };
+
+  container.innerHTML = `
+    <div class="card mt-16">
+      <div class="card-header">
+        <div class="card-title">Customer Orders</div>
+        <div class="text-muted text-sm">${CUSTOMER_ORDERS.length} orders</div>
+      </div>
+      <div class="card-body" style="padding:0">
+        <div class="orders-list">
+          ${CUSTOMER_ORDERS.map(o => {
+            const date = new Date(o.date);
+            const timeStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' \u00B7 ' + date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+            const statusClass = o.payment === 'paid' ? 'badge-green' : 'badge-orange';
+            return `
+              <div class="order-feed-item">
+                <div class="order-feed-main">
+                  <div class="order-feed-top">
+                    <span class="order-feed-name">${o.firstName} ${o.lastName}</span>
+                    <span class="order-feed-amount">$${o.amount}</span>
+                  </div>
+                  <div class="order-feed-meta">
+                    <span class="order-feed-student">${o.student}</span>
+                    <span class="order-feed-dot">\u00B7</span>
+                    <span>${o.package}</span>
+                  </div>
+                  <div class="order-feed-bottom">
+                    <span class="order-feed-time">${timeStr}</span>
+                    <span class="badge badge-sm ${statusClass}">${paymentIcons[o.paymentMethod] || '\u{1F4B3}'} ${o.payment}</span>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderRequestsList(container) {
+  const statusColors = { open: 'badge-red', pending: 'badge-orange', closed: 'badge-gray' };
+
+  container.innerHTML = `
+    <div class="card mt-16">
+      <div class="card-header">
+        <div class="card-title">Customer Requests</div>
+      </div>
+      <div class="card-body" style="padding:0">
+        <div class="requests-list">
+          ${CUSTOMER_REQUESTS.map(r => `
+            <div class="request-item">
+              <div class="request-item-header">
+                <span class="badge ${statusColors[r.status] || 'badge-gray'}">${r.status}</span>
+                <span class="request-item-type">${r.type}</span>
+                <span class="request-item-order">Order #${r.orderNo}</span>
+              </div>
+              <div class="request-item-customer">${r.customer}</div>
+              <div class="request-item-message">${r.message}</div>
+              <div class="request-item-dates">
+                <span class="text-muted text-xs">Created ${r.created}</span>
+                <span class="text-muted text-xs">\u00B7 Updated ${r.modified}</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderBatchList(container) {
+  container.innerHTML = `
+    <div class="card mt-16">
+      <div class="card-header">
+        <div class="card-title">Batch Shipping</div>
+      </div>
+      <div class="card-body" style="padding:0">
+        <div class="batch-list">
+          ${BATCH_SHIPPING.map(b => {
+            const isActive = b.status === 'collecting';
+            const deadline = new Date(b.deadline);
+            const now = new Date();
+            const daysLeft = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+            return `
+              <div class="batch-item ${isActive ? 'batch-active' : ''}">
+                <div class="batch-item-top">
+                  <span class="batch-item-name">${b.jobName}</span>
+                  <span class="badge ${isActive ? 'badge-green' : 'badge-gray'}">${b.status}</span>
+                </div>
+                <div class="batch-item-meta">
+                  <span>${b.orders} orders</span>
+                  <span class="order-feed-dot">\u00B7</span>
+                  <span>${b.internalName}</span>
+                </div>
+                <div class="batch-item-deadline">
+                  ${isActive && daysLeft > 0 ? `<span class="batch-deadline-urgent">${daysLeft} days left</span>` : ''}
+                  <span class="text-muted text-xs">Deadline: ${deadline.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ─── Page: Contacts ─────────────────────────────────────
+function renderContacts() {
+  const content = document.getElementById('pageContent');
+  const buyerCount = CONTACTS.filter(c => c.status === 'buyer').length;
+  const potentialCount = CONTACTS.filter(c => c.status === 'potential').length;
+
+  content.innerHTML = `
+    <div class="orders-tabs">
+      <button class="orders-tab ${contactsTab === 'buyers' ? 'active' : ''}" data-contacts-tab="buyers">
+        ${SVG.account} Buyers <span class="orders-tab-count">${buyerCount}</span>
+      </button>
+      <button class="orders-tab ${contactsTab === 'students' ? 'active' : ''}" data-contacts-tab="students">
+        ${SVG.camera} Students
+      </button>
+      <button class="orders-tab ${contactsTab === 'orgs' ? 'active' : ''}" data-contacts-tab="orgs">
+        ${SVG.jobs} Organizations
+      </button>
+    </div>
+    <div id="contactsContent"></div>
+  `;
+
+  content.querySelectorAll('[data-contacts-tab]').forEach(tab => {
+    tab.addEventListener('click', () => {
+      contactsTab = tab.dataset.contactsTab;
+      renderContacts();
+    });
+  });
+
+  const inner = document.getElementById('contactsContent');
+
+  if (contactsTab === 'buyers') {
+    renderBuyersList(inner);
+  } else if (contactsTab === 'students') {
+    renderStudentsList(inner);
+  } else {
+    renderOrgsList(inner);
+  }
+}
+
+function renderBuyersList(container) {
+  const sorted = [...CONTACTS].sort((a, b) => b.totalSpent - a.totalSpent);
+  container.innerHTML = `
+    <div class="card mt-16">
+      <div class="card-body" style="padding:0">
+        <div class="contacts-list">
+          ${sorted.map(c => {
+            const initials = c.firstName[0] + c.lastName[0];
+            const statusBadge = c.status === 'buyer' ? 'badge-green' : 'badge-orange';
+            return `
+              <div class="contact-item">
+                <div class="avatar-circle avatar-sm">${initials}</div>
+                <div class="contact-item-info">
+                  <div class="contact-item-name">${c.firstName} ${c.lastName}</div>
+                  <div class="contact-item-meta">
+                    ${c.students.join(', ')} \u00B7 ${c.role}
+                  </div>
+                  <div class="contact-item-email">${c.email}</div>
+                </div>
+                <div class="contact-item-right">
+                  <div class="contact-item-spent">${c.totalSpent > 0 ? '$' + c.totalSpent : '\u2014'}</div>
+                  <div class="contact-item-orders">${c.orders} order${c.orders !== 1 ? 's' : ''}</div>
+                  <span class="badge badge-sm ${statusBadge}">${c.status}</span>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderStudentsList(container) {
+  const allStudents = STUDENTS.map(s => {
+    const job = GALLERY_JOBS.find(j => j.status === 'active');
+    return { ...s, school: job?.school || 'United Day School', group: job?.grade || '', teacher: job?.teacher || '' };
+  });
+
+  container.innerHTML = `
+    <div class="card mt-16">
+      <div class="card-body" style="padding:0">
+        <div class="contacts-list">
+          ${allStudents.map(s => `
+            <div class="contact-item">
+              <div class="avatar-circle avatar-sm" style="background:var(--accent-light);color:white">${s.name.split(' ').map(n=>n[0]).join('')}</div>
+              <div class="contact-item-info">
+                <div class="contact-item-name">${s.name}</div>
+                <div class="contact-item-meta">${s.school} \u00B7 ${s.grade}</div>
+                <div class="contact-item-email">${s.teacher}</div>
+              </div>
+              <div class="contact-item-right">
+                <div class="contact-item-spent">${s.photoCount} photos</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderOrgsList(container) {
+  container.innerHTML = `
+    <div class="card mt-16">
+      <div class="card-body" style="padding:0">
+        <div class="contacts-list">
+          ${ORGANIZATIONS.map(org => `
+            <div class="contact-item">
+              <div class="avatar-circle avatar-sm" style="background:var(--green);color:white">${org.name.split(' ').map(n=>n[0]).join('').slice(0,2)}</div>
+              <div class="contact-item-info">
+                <div class="contact-item-name">${org.name}</div>
+                <div class="contact-item-meta">${org.city}, ${org.state} \u00B7 ${org.jobs} jobs \u00B7 ${org.subjects} subjects</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 // ─── Page: Job Detail ───────────────────────────────────
 function renderJobDetail(job) {
   if (!job) job = GALLERY_JOBS[0];
   const el = document.getElementById('pageContent');
   const isYearbook = job.type === 'Yearbook';
   const groupUrl = getGroupPhotoUrl(job);
+  const funnel = JOB_FUNNELS[job.id];
 
   el.innerHTML = `
     <div class="back-link" id="backToJobs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;vertical-align:middle;margin-right:4px"><polyline points="15 18 9 12 15 6"/></svg>Back to Jobs</div>
@@ -846,6 +1133,74 @@ function renderJobDetail(job) {
         </div>
 
         <button class="btn btn-accent mt-24" style="width:100%">Save Changes</button>
+
+        <!-- Job Lifecycle Card -->
+        <div class="card mt-16">
+          <div class="card-header"><div class="card-title">Job Lifecycle</div></div>
+          <div class="card-body">
+            <div class="lifecycle-bar">
+              <div class="lifecycle-step ${job.status === 'active' ? 'lifecycle-past' : ''}" data-lifecycle="planning">
+                <div class="lifecycle-dot"></div>
+                <span>Planning</span>
+              </div>
+              <div class="lifecycle-line ${job.status === 'active' || job.status === 'archived' ? 'lifecycle-line-done' : ''}"></div>
+              <div class="lifecycle-step ${job.status === 'active' ? 'lifecycle-current' : job.status === 'archived' ? 'lifecycle-past' : ''}" data-lifecycle="selling">
+                <div class="lifecycle-dot"></div>
+                <span>Selling</span>
+              </div>
+              <div class="lifecycle-line ${job.status === 'archived' ? 'lifecycle-line-done' : ''}"></div>
+              <div class="lifecycle-step ${job.status === 'archived' ? 'lifecycle-current' : ''}" data-lifecycle="archived">
+                <div class="lifecycle-dot"></div>
+                <span>Archived</span>
+              </div>
+            </div>
+            <div class="lifecycle-actions mt-16">
+              ${job.status === 'active' ? `<button class="btn btn-outline btn-sm">\u2190 Back to Planning</button> <button class="btn btn-accent btn-sm">Archive Job \u2192</button>` : ''}
+              ${job.status === 'archived' ? `<button class="btn btn-accent btn-sm">\u2190 Reactivate (Start Selling)</button>` : ''}
+              ${job.status !== 'active' && job.status !== 'archived' ? `<button class="btn btn-accent btn-sm">Start Selling \u2192</button>` : ''}
+            </div>
+          </div>
+        </div>
+
+        <!-- Funnel Card -->
+        ${funnel ? `
+        <div class="card mt-16">
+          <div class="card-header"><div class="card-title">Sales Funnel</div></div>
+          <div class="card-body">
+            <div class="funnel-chart">
+              ${[
+                { label: 'Access Codes', value: funnel.accessCodes, pct: 100 },
+                { label: 'Logins', value: funnel.logins, pct: Math.round(funnel.logins / funnel.accessCodes * 100) },
+                { label: 'Customers', value: funnel.customers, pct: Math.round(funnel.customers / funnel.accessCodes * 100) },
+                { label: 'Orders', value: funnel.orders, pct: Math.round(funnel.orders / funnel.accessCodes * 100) },
+              ].map(step => `
+                <div class="funnel-step">
+                  <div class="funnel-bar-wrap">
+                    <div class="funnel-bar" style="width:${step.pct}%"></div>
+                  </div>
+                  <div class="funnel-label">
+                    <span>${step.label}</span>
+                    <span class="funnel-value">${step.value} <span class="text-muted">(${step.pct}%)</span></span>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+            <div class="funnel-rates mt-16">
+              <div class="funnel-rate">
+                <div class="funnel-rate-value">${funnel.loginRate}%</div>
+                <div class="funnel-rate-label">Login Rate</div>
+              </div>
+              <div class="funnel-rate">
+                <div class="funnel-rate-value">${funnel.orderRate}%</div>
+                <div class="funnel-rate-label">Order Rate</div>
+              </div>
+              <div class="funnel-rate">
+                <div class="funnel-rate-value">$${job.revenue > 0 && funnel.orders > 0 ? Math.round(job.revenue / funnel.orders) : 0}</div>
+                <div class="funnel-rate-label">Avg per Order</div>
+              </div>
+            </div>
+          </div>
+        </div>` : ''}
       </div>
 
       <div class="job-detail-right">
@@ -901,44 +1256,111 @@ function renderJobDetail(job) {
 function renderPhoneGalleryPreview(job) {
   const isYearbook = job.type === 'Yearbook';
   const groupUrl = getGroupPhotoUrl(job);
-  const previewPhotos = job.photos.slice(0, 9);
+  const previewPhotos = job.photos.slice(0, 6);
   const accent = PHOTOGRAPHER.theme.accent;
+  const headerBg = PHOTOGRAPHER.theme.headerBg || '#1a1a2e';
+  const firstPhoto = job.photos[0];
+  const avatarUrl = firstPhoto ? getPhotoUrl(firstPhoto.file, job) : '';
+  const maxPicks = job.yearbookPicks || 2;
+  const daysLeft = job.status === 'active' ? 49 : '--';
 
   return `
-    <div class="phone-gallery-header" style="background:${accent}">
+    <div class="pp-brand-bar" style="background:${headerBg}">
       ${PHOTOGRAPHER.logo
-        ? `<img src="${PHOTOGRAPHER.logo}" alt="${PHOTOGRAPHER.business}" class="phone-gallery-logo">`
-        : `<div class="phone-gallery-biz">${PHOTOGRAPHER.business}</div>`
+        ? `<img src="${PHOTOGRAPHER.logo}" alt="${PHOTOGRAPHER.business}" class="pp-brand-logo">`
+        : `<div class="pp-brand-name">${PHOTOGRAPHER.business}</div>`
       }
-      <div class="phone-gallery-name">${job.name}</div>
-      <div class="phone-gallery-info">${job.grade} &middot; ${job.teacher}</div>
     </div>
-    ${isYearbook ? `
-    <div class="phone-yb-bar" style="background:${accent}15;border-left:3px solid ${accent}">
-      <div class="phone-yb-bar-icon">${SVG.star}</div>
-      <div class="phone-yb-bar-count">Select your top ${job.yearbookPicks} photo${job.yearbookPicks > 1 ? 's' : ''}</div>
+    <div class="pp-hero">
+      <div class="pp-hero-top">
+        <div class="pp-back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div>
+        <div class="pp-avatar">
+          <img src="${avatarUrl}" alt="" onerror="this.style.display='none'">
+        </div>
+        <div class="pp-hero-info">
+          <div class="pp-hero-name">${STUDENTS[0]?.name || 'Student'}</div>
+          <div class="pp-hero-job">${job.name}</div>
+          <div class="pp-hero-meta">${job.grade} · ${job.teacher}</div>
+        </div>
+        <div class="pp-share">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+        </div>
+      </div>
+      <div class="pp-stats">
+        <div class="pp-stat">
+          <span class="pp-stat-num">${job.photos.length}</span>
+          <span class="pp-stat-label">PHOTOS</span>
+        </div>
+        <div class="pp-stat-div"></div>
+        <div class="pp-stat">
+          <span class="pp-stat-num">0</span>
+          <span class="pp-stat-label">FAVORITES</span>
+        </div>
+        <div class="pp-stat-div"></div>
+        <div class="pp-stat">
+          <span class="pp-stat-num" style="color:${accent}">${daysLeft}</span>
+          <span class="pp-stat-label">${job.status === 'active' ? 'DAYS LEFT' : 'ARCHIVED'}</span>
+        </div>
+      </div>
+      ${isYearbook ? `
+      <div class="pp-yb-bar" style="background:${headerBg}">
+        <span class="pp-yb-star" style="color:${accent}">★</span>
+        <span class="pp-yb-text">Yearbook Photo Picks</span>
+        <span class="pp-yb-count" style="background:${accent}">0/${maxPicks}</span>
+        <div class="pp-yb-circles">
+          ${Array.from({length: maxPicks}, (_, i) => `<span class="pp-yb-circle">${i + 1}</span>`).join('')}
+        </div>
+      </div>
+      ` : ''}
+      <div class="pp-action-row">
+        <button class="pp-action-pill">♥ Favorites</button>
+        <button class="pp-action-pill pp-action-primary">${SVG.packages} Shop Packages</button>
+      </div>
     </div>
-    ` : ''}
     ${groupUrl ? `
-    <div class="phone-group-section">
-      <div class="phone-section-label">Class Photo</div>
-      <div class="phone-group-img">
-        <img src="${groupUrl}" alt="Group photo" onerror="this.parentNode.innerHTML='Group Photo'">
+    <div class="pp-group-card">
+      <img src="${groupUrl}" alt="Class Photo" onerror="this.parentNode.innerHTML='Class Photo'">
+      <div class="pp-group-overlay">
+        <div class="pp-group-label">Class Photo</div>
+        <div class="pp-group-icons">
+          <span class="pp-group-icon">★</span>
+          <span class="pp-group-icon">♥</span>
+        </div>
       </div>
     </div>
     ` : ''}
-    <div class="phone-section-label">Individual Photos</div>
-    <div class="phone-photo-grid">
+    <div class="pp-photo-grid">
       ${previewPhotos.map(p => `
-        <div class="phone-photo-thumb">
+        <div class="pp-photo-cell">
           <img src="${getPhotoUrl(p.file, job)}" alt="${p.label}" onerror="this.style.display='none'">
         </div>
       `).join('')}
-      ${job.photos.length > 9 ? `
-      <div class="phone-photo-thumb phone-photo-more">+${job.photos.length - 9}</div>
-      ` : ''}
     </div>
-    <div class="phone-shop-btn" style="background:${accent}">Shop Photos</div>
+    <div class="pp-quick-add" style="background:${headerBg}">
+      <div class="pp-quick-text">
+        <div class="pp-quick-title">Get all ${job.photos.length} photos digitally</div>
+        <div class="pp-quick-price">$199 — instant download</div>
+      </div>
+      <div class="pp-quick-btn" style="background:${accent}">Add to Cart</div>
+    </div>
+    <div class="pp-tab-bar">
+      <div class="pp-tab pp-tab-active" style="color:${accent}">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        <span>Gallery</span>
+      </div>
+      <div class="pp-tab">
+        <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        <span>Packages</span>
+      </div>
+      <div class="pp-tab">
+        <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span>Cart</span>
+      </div>
+      <div class="pp-tab">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Account</span>
+      </div>
+    </div>
   `;
 }
 
@@ -1110,6 +1532,43 @@ function renderAnalytics() {
             <div class="rank-value">$${p.revenue.toLocaleString()}</div>
           </div>
         `).join('')}
+      </div>
+    </div>
+
+    <div class="card mt-24">
+      <div class="card-header"><div class="card-title">Monthly Statistics</div></div>
+      <div class="card-body" style="padding:0">
+        <div class="monthly-table-wrap">
+          <table class="monthly-table">
+            <thead>
+              <tr>
+                <th>Month</th>
+                <th>Orders</th>
+                <th>Revenue</th>
+                <th>Payments</th>
+                <th>GP Fee</th>
+                <th>Production</th>
+                <th>Net</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${MONTHLY_STATS.map(m => {
+                const net = m.payments - m.refunds - m.gpFee - m.production - m.shipping;
+                return `
+                  <tr>
+                    <td class="font-bold">${m.month}</td>
+                    <td>${m.orders}</td>
+                    <td>$${m.revenue.toLocaleString()}</td>
+                    <td>$${m.payments.toLocaleString()}</td>
+                    <td class="text-muted">-$${m.gpFee}</td>
+                    <td class="text-muted">-$${m.production}</td>
+                    <td class="${net >= 0 ? 'text-green' : 'text-red'}">$${net.toLocaleString()}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   `;
@@ -1324,6 +1783,14 @@ function renderSettings() {
                 <input class="form-input" type="text" value="${theme.accentLight}" id="accentLightInput" style="font-family:monospace">
               </div>
             </div>
+            <div class="form-group">
+              <label class="form-label">Header Background</label>
+              <div class="color-input-row">
+                <div class="color-swatch" style="background:${theme.headerBg || '#1a1a2e'}" id="headerBgSwatch"></div>
+                <input class="form-input" type="text" value="${theme.headerBg || '#1a1a2e'}" id="headerBgInput" style="font-family:monospace">
+              </div>
+              <div class="text-xs text-muted mt-8">Background color for the logo bar shown at the top of the client app.</div>
+            </div>
             <div class="brand-defaults-note">
               <div class="brand-defaults-title">GotPhoto Defaults</div>
               <div class="brand-defaults-colors">
@@ -1358,18 +1825,23 @@ function renderSettings() {
   const updatePreview = () => {
     const accent = document.getElementById('accentInput').value;
     const accentLight = document.getElementById('accentLightInput').value;
+    const headerBg = document.getElementById('headerBgInput').value;
     document.getElementById('accentSwatch').style.background = accent;
     document.getElementById('accentLightSwatch').style.background = accentLight;
+    document.getElementById('headerBgSwatch').style.background = headerBg;
     const card = document.getElementById('brandPreviewCard');
     card.querySelector('.brand-preview-header').style.background = accent;
     card.querySelector('.brand-preview-btn').style.background = accent;
     card.querySelector('.brand-preview-btn-outline').style.color = accent;
     card.querySelector('.brand-preview-btn-outline').style.borderColor = accent;
     card.querySelector('.brand-preview-link').style.color = accent;
+    // Update shared data so client app picks it up
+    PHOTOGRAPHER.theme.headerBg = headerBg;
   };
 
   document.getElementById('accentInput')?.addEventListener('input', updatePreview);
   document.getElementById('accentLightInput')?.addEventListener('input', updatePreview);
+  document.getElementById('headerBgInput')?.addEventListener('input', updatePreview);
 
   // Logo upload preview
   document.getElementById('logoFileInput')?.addEventListener('change', (e) => {

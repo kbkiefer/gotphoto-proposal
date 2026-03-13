@@ -45,6 +45,8 @@ const state = {
   selectionSlots: [],      // [{label, photoId, templateId}]
   activeSlotIndex: 0,
   showReview: false,
+  selectionTab: 'pose',    // 'pose' | 'crop' | 'favorites'
+  cropOffsets: {},         // { slotIndex: { tx, ty } }
 };
 
 const student = STUDENTS[0];
@@ -99,8 +101,28 @@ const categoryIcons = {
 // =========================================
 const app = document.getElementById('app');
 
+function buildBrandBar() {
+  const showOn = ['jobs', 'gallery', 'packages', 'cart', 'account'];
+  const visible = showOn.includes(state.currentScreen);
+  const el = document.createElement('div');
+  el.className = `brand-bar ${visible ? '' : 'hidden'}`;
+  el.id = 'brandBar';
+  el.style.background = PHOTOGRAPHER.theme.headerBg || '#1a1a2e';
+  const logoSrc = PHOTOGRAPHER.logo;
+  el.innerHTML = `
+    <div class="brand-bar-inner">
+      ${logoSrc
+        ? `<img src="${logoSrc}" alt="${PHOTOGRAPHER.business}" class="brand-bar-logo">`
+        : `<div class="brand-bar-name">${PHOTOGRAPHER.business}</div>`
+      }
+    </div>
+  `;
+  return el;
+}
+
 function render() {
   app.innerHTML = '';
+  app.appendChild(buildBrandBar());
   app.appendChild(buildScreens());
   app.appendChild(buildTabBar());
   app.appendChild(buildQuickAddBanner());
@@ -152,14 +174,16 @@ function buildAccessScreen() {
   const isActive = state.currentScreen === 'access';
   const account = CLIENT_ACCOUNTS[0]; // Default mock account
   const logoSrc = PHOTOGRAPHER.logo;
+  const headerBg = PHOTOGRAPHER.theme.headerBg || '#1a1a2e';
   return `
     <div class="screen ${isActive ? 'active' : ''}" data-screen="access">
-      <div class="access-screen">
+      <div class="access-brand-bar" style="background:${headerBg}">
         ${logoSrc
-          ? `<img src="${logoSrc}" alt="${PHOTOGRAPHER.business}" class="access-biz-logo">`
-          : `<div class="access-logo">Choice<span class="logo-accent">Pix</span></div>
-             <div class="access-tagline">Photography</div>`
+          ? `<img src="${logoSrc}" alt="${PHOTOGRAPHER.business}" class="access-brand-logo">`
+          : `<div class="access-brand-name">${PHOTOGRAPHER.business}</div>`
         }
+      </div>
+      <div class="access-screen">
         <h2 class="access-welcome">Sign In</h2>
         <p class="access-subtitle">Log in to view and order your photos</p>
         <div class="login-field">
@@ -213,10 +237,6 @@ function buildJobSelectorScreen() {
   return `
     <div class="screen has-tabs ${isActive ? 'active' : ''}" data-screen="jobs">
       <div class="screen-header">
-        ${PHOTOGRAPHER.logo
-          ? `<img src="${PHOTOGRAPHER.logo}" alt="${PHOTOGRAPHER.business}" class="job-selector-logo-img">`
-          : `<div class="job-selector-logo">Choice<span class="logo-accent">Pix</span></div>`
-        }
         <h1>${student.name}</h1>
         <div class="subtitle">United Day School &middot; K through 4th Grade</div>
       </div>
@@ -495,7 +515,12 @@ function buildSelectionScreen() {
   const photos = activePhotos();
   const filledCount = slots.filter(s => s.photoId).length;
   const totalSlots = slots.length;
-  const allFilled = filledCount === totalSlots;
+  const allFilled = totalSlots > 0 && filledCount === totalSlots;
+
+  // Not in selection mode — return empty placeholder
+  if (!isActive && !pkg) {
+    return `<div class="screen" data-screen="selection"></div>`;
+  }
 
   // Review mode — all slots filled, show summary
   if (allFilled && state.showReview) {
@@ -533,6 +558,7 @@ function buildSelectionScreen() {
   // Picking mode — one slot at a time
   const activeSlot = slots[state.activeSlotIndex] || null;
   const activePhoto = activeSlot?.photoId ? photos.find(p => p.id === activeSlot.photoId) : null;
+  const selectionTab = state.selectionTab || 'pose'; // 'pose' | 'crop' | 'favorites'
 
   // Split photos: liked first, then the rest
   const likedPhotos = photos.filter(p => state.liked.has(p.id));
@@ -555,42 +581,78 @@ function buildSelectionScreen() {
     `;
   }
 
-  // Favorites section
-  let favoritesHtml = '';
-  if (likedPhotos.length > 0) {
-    favoritesHtml = `
-      <div class="pick-section">
-        <div class="pick-section-title">${icons.heart} Your Favorites</div>
-        <div class="pose-grid-v2">${likedPhotos.map(buildPhotoCell).join('')}</div>
+  // Large preview area
+  const previewHtml = activePhoto
+    ? `<div class="sel-preview">
+        <div class="sel-preview-img ${selectionTab === 'crop' ? 'sel-preview-crop' : ''}">
+          <img src="${getPhotoUrl(activePhoto.file, activeGalleryJob())}" alt="${activePhoto.label}" id="selPreviewImg">
+          ${selectionTab === 'crop' ? '<div class="sel-crop-overlay"><div class="sel-crop-frame" id="selCropFrame"></div></div>' : ''}
+        </div>
+        <div class="sel-preview-label">${activePhoto.label}</div>
+      </div>`
+    : `<div class="sel-preview sel-preview-empty">
+        <div class="sel-preview-placeholder">
+          <div class="sel-preview-icon">${icons.gallery}</div>
+          <span>Select a pose below</span>
+        </div>
+      </div>`;
+
+  // Pose/Crop/Favorites tabs
+  const hasFavs = likedPhotos.length > 0;
+  const tabsHtml = `
+    <div class="sel-tabs">
+      <button class="sel-tab ${selectionTab === 'pose' ? 'active' : ''}" data-action="sel-tab" data-tab="pose">
+        ${icons.gallery} Pose
+      </button>
+      <button class="sel-tab ${selectionTab === 'crop' ? 'active' : ''} ${!activePhoto ? 'disabled' : ''}" data-action="sel-tab" data-tab="crop">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v6h6"/><path d="M18 22v-6h-6"/><path d="M6 8l12 8"/></svg> Crop
+      </button>
+      ${hasFavs ? `<button class="sel-tab ${selectionTab === 'favorites' ? 'active' : ''}" data-action="sel-tab" data-tab="favorites">
+        ${icons.heart} Favorites <span class="sel-tab-count">${likedPhotos.length}</span>
+      </button>` : ''}
+    </div>
+  `;
+
+  // Crop state for this slot
+  const slotCropOffset = state.cropOffsets[state.activeSlotIndex];
+  const cropConfirmed = activeSlot?.photoId && slotCropOffset?.confirmed;
+
+  // Tab content
+  let tabContentHtml = '';
+  if (selectionTab === 'pose' || selectionTab === 'favorites') {
+    const showPhotos = selectionTab === 'favorites' ? likedPhotos : photos;
+    const sectionTitle = selectionTab === 'favorites' ? 'Your Favorites' : 'Select a pose';
+    tabContentHtml = `
+      <div class="sel-poses-section">
+        <div class="sel-poses-title">${sectionTitle}</div>
+        <div class="sel-pose-strip">${showPhotos.map(buildPhotoCell).join('')}</div>
+      </div>
+    `;
+  } else if (selectionTab === 'crop') {
+    tabContentHtml = `
+      <div class="sel-crop-section">
+        <div class="sel-crop-hint">${cropConfirmed ? 'Crop confirmed! Adjust again or continue.' : 'Drag the photo to reposition within the frame'}</div>
+        <div class="sel-crop-actions">
+          <button class="sel-crop-btn" data-action="crop-reset">${icons.back} Reset</button>
+          <button class="sel-crop-btn sel-crop-confirm-btn ${cropConfirmed ? 'confirmed' : ''}" data-action="crop-confirm">
+            ${cropConfirmed ? icons.check + ' Confirmed' : icons.check + ' Confirm Crop'}
+          </button>
+        </div>
       </div>
     `;
   }
 
-  // All photos section
-  const allPhotosLabel = likedPhotos.length > 0 ? 'All Photos' : 'Choose a Photo';
-  const photosToShow = likedPhotos.length > 0 ? otherPhotos : photos;
-  const allPhotosHtml = `
-    <div class="pick-section">
-      <div class="pick-section-title">${allPhotosLabel}</div>
-      <div class="pose-grid-v2">${photosToShow.map(buildPhotoCell).join('')}</div>
-    </div>
-  `;
-
-  // Filled slots mini-strip at bottom (shows what's been picked so far)
-  const filledSlots = slots.filter(s => s.photoId);
-  let miniStripHtml = '';
-  if (filledSlots.length > 0) {
-    const miniItems = slots.map((s, i) => {
-      if (!s.photoId) return `<div class="mini-slot mini-slot-empty" data-action="jump-slot" data-slot-index="${i}"><span>${i + 1}</span></div>`;
-      const photo = photos.find(p => p.id === s.photoId);
-      const isCurrent = i === state.activeSlotIndex;
-      return `
-        <div class="mini-slot ${isCurrent ? 'mini-slot-current' : ''}" data-action="jump-slot" data-slot-index="${i}">
-          <img src="${getPhotoThumb(photo.file)}" alt="${photo.label}">
-        </div>`;
-    }).join('');
-    miniStripHtml = `<div class="mini-strip">${miniItems}</div>`;
-  }
+  // Filled slots mini-strip
+  const miniItems = slots.map((s, i) => {
+    if (!s.photoId) return `<div class="mini-slot mini-slot-empty" data-action="jump-slot" data-slot-index="${i}"><span>${i + 1}</span></div>`;
+    const photo = photos.find(p => p.id === s.photoId);
+    const isCurrent = i === state.activeSlotIndex;
+    return `
+      <div class="mini-slot ${isCurrent ? 'mini-slot-current' : ''}" data-action="jump-slot" data-slot-index="${i}">
+        <img src="${getPhotoThumb(photo.file)}" alt="${photo.label}">
+      </div>`;
+  }).join('');
+  const miniStripHtml = `<div class="mini-strip">${miniItems}</div>`;
 
   return `
     <div class="screen ${isActive ? 'active' : ''}" data-screen="selection">
@@ -598,27 +660,41 @@ function buildSelectionScreen() {
         <button class="selection-back" data-action="back-from-selection">
           ${icons.back} Back
         </button>
-        <div class="selection-title">${pkg ? pkg.name : 'Select Photos'}</div>
-        <div class="selection-progress-bar">
-          <div class="selection-progress-fill" style="width: ${totalSlots > 0 ? (filledCount / totalSlots * 100) : 0}%"></div>
+        <div class="selection-header-right">
+          <div class="selection-title">${pkg ? pkg.name : 'Select Photos'}</div>
+          <div class="pick-prompt-step">Photo ${state.activeSlotIndex + 1} of ${totalSlots} — ${activeSlot ? activeSlot.label : ''}</div>
         </div>
       </div>
 
-      <div class="pick-prompt">
-        <div class="pick-prompt-step">Photo ${state.activeSlotIndex + 1} of ${totalSlots}</div>
-        <div class="pick-prompt-item">${activeSlot ? activeSlot.label : ''}</div>
-        ${activePhoto ? `<div class="pick-prompt-selected">Selected: ${activePhoto.label} — tap another to change</div>` : ''}
+      <div class="selection-progress-bar">
+        <div class="selection-progress-fill" style="width: ${totalSlots > 0 ? (filledCount / totalSlots * 100) : 0}%"></div>
       </div>
 
       <div class="selection-body">
-        ${favoritesHtml}
-        ${allPhotosHtml}
+        ${previewHtml}
+        ${tabsHtml}
+        ${tabContentHtml}
       </div>
 
       <div class="selection-footer">
-        ${state.activeSlotIndex > 0 ? `<button class="btn-slot-nav" data-action="prev-slot">${icons.back}</button>` : '<div></div>'}
         ${miniStripHtml}
-        <div></div>
+        ${allFilled && cropConfirmed ? `
+          <button class="btn-continue btn-continue-pulse" data-action="show-review">
+            Review & Add to Cart
+          </button>
+        ` : activePhoto && cropConfirmed ? `
+          <button class="btn-continue" data-action="next-slot">
+            ${icons.check} Confirm & Next Photo
+          </button>
+        ` : activePhoto && !cropConfirmed ? `
+          <button class="btn-continue btn-continue-muted" data-action="go-to-crop">
+            Crop to Continue
+          </button>
+        ` : `
+          <button class="btn-continue" disabled>
+            Select a Pose
+          </button>
+        `}
       </div>
     </div>
   `;
@@ -827,16 +903,32 @@ function buildPhotoViewer() {
   const el = document.createElement('div');
   el.className = 'photo-viewer';
   el.id = 'photoViewer';
-  const photo = activePhotos()[state.viewerIndex];
+  const photos = activePhotos();
+  const gj = activeGalleryJob();
+  const photo = photos[state.viewerIndex];
   const isLiked = photo ? state.liked.has(photo.id) : false;
   const isYB = isYearbookJob();
   const isYbPicked = isYB && photo ? state.yearbookPicks.includes(photo.id) : false;
   const ybPickIndex = isYB && photo ? state.yearbookPicks.indexOf(photo.id) : -1;
+
+  const chevronLeft = `<svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>`;
+  const chevronRight = `<svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg>`;
+
+  const stripHtml = photos.map((p, i) => `
+    <div class="viewer-strip-thumb ${i === state.viewerIndex ? 'active' : ''}" data-action="viewer-strip-goto" data-strip-index="${i}">
+      <img src="${getPhotoUrl(p.file, gj)}" alt="${p.label}" loading="lazy">
+    </div>
+  `).join('');
+
   el.innerHTML = `
-    <div class="viewer-counter" id="viewerCounter">${state.viewerIndex + 1} / ${activePhotos().length}</div>
+    <div class="viewer-counter" id="viewerCounter">${state.viewerIndex + 1} of ${photos.length}</div>
     <button class="viewer-close" data-action="close-viewer">${icons.close}</button>
-    <div class="viewer-image-wrap" id="viewerImageWrap">
-      <img id="viewerImage" src="${photo ? getPhotoUrl(photo.file) : ''}" alt="">
+    <button class="viewer-nav viewer-nav-prev" data-action="viewer-prev">${chevronLeft}</button>
+    <button class="viewer-nav viewer-nav-next" data-action="viewer-next">${chevronRight}</button>
+    <div class="viewer-slide-container" id="viewerSlideContainer">
+      <div class="viewer-image-wrap" id="viewerImageWrap">
+        <img id="viewerImage" src="${photo ? getPhotoUrl(photo.file, gj) : ''}" alt="">
+      </div>
     </div>
     <div class="viewer-actions">
       <button class="viewer-heart-btn ${isLiked ? 'liked' : ''}" id="viewerHeart" data-action="viewer-like">${icons.heart}</button>
@@ -845,6 +937,7 @@ function buildPhotoViewer() {
         ${isYbPicked && maxYearbookPicks() > 1 ? `<span class="viewer-star-num">${ybPickIndex + 1}</span>` : ''}
       </button>` : ''}
     </div>
+    <div class="viewer-strip" id="viewerStrip">${stripHtml}</div>
   `;
   return el;
 }
@@ -962,6 +1055,8 @@ function navigate(screen, params = {}) {
     state.selectionSlots = buildSlotsForPackage(params.package);
     state.activeSlotIndex = 0;
     state.showReview = false;
+    state.selectionTab = 'pose';
+    state.cropOffsets = {};
   }
 
   if (params.jobIndex !== undefined) {
@@ -1001,23 +1096,41 @@ function openGroupViewer(url) {
   const img = document.getElementById('viewerImage');
   const counter = document.getElementById('viewerCounter');
   const heartBtn = document.getElementById('viewerHeart');
+  const strip = document.getElementById('viewerStrip');
+  const navPrev = viewer?.querySelector('.viewer-nav-prev');
+  const navNext = viewer?.querySelector('.viewer-nav-next');
   if (img) img.src = url;
   if (counter) counter.style.display = 'none';
   if (heartBtn) heartBtn.style.display = 'none';
+  if (strip) strip.style.display = 'none';
+  if (navPrev) navPrev.style.display = 'none';
+  if (navNext) navNext.style.display = 'none';
   viewer.classList.add('open');
 }
 
 function closeViewer() {
   const viewer = document.getElementById('photoViewer');
-  viewer?.classList.remove('open');
-  if (state.viewerGroupMode) {
-    const counter = document.getElementById('viewerCounter');
-    const heartBtn = document.getElementById('viewerHeart');
-    if (counter) counter.style.display = '';
-    if (heartBtn) heartBtn.style.display = '';
-    state.viewerGroupMode = false;
-  }
+  if (!viewer) return;
+
+  // Collapse animation
+  viewer.classList.add('viewer-collapsing');
+  viewer.classList.remove('open');
+
+  setTimeout(() => {
+    viewer.classList.remove('viewer-collapsing');
+    if (state.viewerGroupMode) {
+      const counter = document.getElementById('viewerCounter');
+      const heartBtn = document.getElementById('viewerHeart');
+      const strip = document.getElementById('viewerStrip');
+      if (counter) counter.style.display = '';
+      if (heartBtn) heartBtn.style.display = '';
+      if (strip) strip.style.display = '';
+      state.viewerGroupMode = false;
+    }
+  }, 350);
 }
+
+let _viewerSliding = false;
 
 function updateViewerImage() {
   const photos = activePhotos();
@@ -1028,20 +1141,94 @@ function updateViewerImage() {
   const counter = document.getElementById('viewerCounter');
   const heartBtn = document.getElementById('viewerHeart');
   if (img) img.src = getPhotoUrl(photo.file, gj);
-  if (counter) counter.textContent = `${state.viewerIndex + 1} / ${photos.length}`;
+  if (counter) counter.textContent = `${state.viewerIndex + 1} of ${photos.length}`;
   if (heartBtn) heartBtn.classList.toggle('liked', state.liked.has(photo.id));
+
+  // Update yearbook star
+  const isYB = isYearbookJob();
+  const starBtn = document.getElementById('viewerStar');
+  if (starBtn && isYB) {
+    const isYbPicked = state.yearbookPicks.includes(photo.id);
+    const ybPickIndex = state.yearbookPicks.indexOf(photo.id);
+    starBtn.classList.toggle('picked', isYbPicked);
+    const numSpan = starBtn.querySelector('.viewer-star-num');
+    if (numSpan) {
+      if (isYbPicked && maxYearbookPicks() > 1) {
+        numSpan.textContent = ybPickIndex + 1;
+        numSpan.style.display = '';
+      } else {
+        numSpan.style.display = 'none';
+      }
+    }
+  }
+
+  // Update strip active state
+  updateViewerStrip();
+}
+
+function updateViewerStrip() {
+  const strip = document.getElementById('viewerStrip');
+  if (!strip) return;
+  const thumbs = strip.querySelectorAll('.viewer-strip-thumb');
+  thumbs.forEach((thumb, i) => {
+    thumb.classList.toggle('active', i === state.viewerIndex);
+  });
+  // Auto-scroll to keep active thumb centered
+  const activeThumb = strip.querySelector('.viewer-strip-thumb.active');
+  if (activeThumb) {
+    const stripRect = strip.getBoundingClientRect();
+    const thumbRect = activeThumb.getBoundingClientRect();
+    const scrollTarget = activeThumb.offsetLeft - (stripRect.width / 2) + (thumbRect.width / 2);
+    strip.scrollTo({ left: scrollTarget, behavior: 'smooth' });
+  }
+}
+
+function viewerSlide(direction, newIndex) {
+  if (_viewerSliding) return;
+  _viewerSliding = true;
+  const wrap = document.getElementById('viewerImageWrap');
+  if (!wrap) { _viewerSliding = false; return; }
+
+  const slideOut = direction === 'next' ? 'slide-left' : 'slide-right';
+  const slideEnter = direction === 'next' ? 'slide-enter-left' : 'slide-enter-right';
+
+  // Slide current image out
+  wrap.classList.add(slideOut);
+
+  setTimeout(() => {
+    // Update index and image
+    state.viewerIndex = newIndex;
+    updateViewerImage();
+
+    // Position new image off-screen on opposite side
+    wrap.classList.remove(slideOut);
+    wrap.classList.add(slideEnter);
+
+    // Force reflow
+    wrap.offsetHeight;
+
+    // Slide new image in
+    wrap.classList.remove(slideEnter);
+    _viewerSliding = false;
+  }, 300);
 }
 
 function viewerNext() {
   const photos = activePhotos();
-  state.viewerIndex = (state.viewerIndex + 1) % photos.length;
-  updateViewerImage();
+  const newIndex = (state.viewerIndex + 1) % photos.length;
+  viewerSlide('next', newIndex);
 }
 
 function viewerPrev() {
   const photos = activePhotos();
-  state.viewerIndex = (state.viewerIndex - 1 + photos.length) % photos.length;
-  updateViewerImage();
+  const newIndex = (state.viewerIndex - 1 + photos.length) % photos.length;
+  viewerSlide('prev', newIndex);
+}
+
+function viewerGoTo(index) {
+  if (index === state.viewerIndex) return;
+  const direction = index > state.viewerIndex ? 'next' : 'prev';
+  viewerSlide(direction, index);
 }
 
 // =========================================
@@ -1089,8 +1276,8 @@ function filterPackages() {
 // EVENTS
 // =========================================
 function bindEvents() {
-  // Tab bar
-  document.querySelectorAll('[data-tab]').forEach(btn => {
+  // Tab bar (only main nav tabs, not selection tabs)
+  document.querySelectorAll('.tab-item[data-tab]').forEach(btn => {
     btn.addEventListener('click', () => {
       const tab = btn.dataset.tab;
       navigate(tab);
@@ -1289,49 +1476,91 @@ function bindEvents() {
     }
   });
 
-  // Viewer swipe
-  const viewerWrap = document.getElementById('viewerImageWrap');
-  if (viewerWrap) {
+  // Viewer navigation arrows
+  document.querySelector('[data-action="viewer-prev"]')?.addEventListener('click', viewerPrev);
+  document.querySelector('[data-action="viewer-next"]')?.addEventListener('click', viewerNext);
+
+  // Viewer strip thumbnails
+  document.querySelectorAll('[data-action="viewer-strip-goto"]').forEach(thumb => {
+    thumb.addEventListener('click', () => {
+      const index = parseInt(thumb.dataset.stripIndex);
+      viewerGoTo(index);
+    });
+  });
+
+  // Viewer swipe on slide container
+  const viewerSlideContainer = document.getElementById('viewerSlideContainer');
+  if (viewerSlideContainer) {
     let startX = 0;
     let startY = 0;
     let scale = 1;
     let startDist = 0;
+    let dragging = false;
+    let dragX = 0;
 
-    viewerWrap.addEventListener('touchstart', (e) => {
+    viewerSlideContainer.addEventListener('touchstart', (e) => {
       if (e.touches.length === 2) {
         startDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
       } else {
         startX = e.touches[0].clientX;
         startY = e.touches[0].clientY;
+        dragging = true;
+        dragX = 0;
+        const wrap = document.getElementById('viewerImageWrap');
+        if (wrap) wrap.style.transition = 'none';
       }
     }, { passive: true });
 
-    viewerWrap.addEventListener('touchmove', (e) => {
+    viewerSlideContainer.addEventListener('touchmove', (e) => {
       if (e.touches.length === 2) {
         const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
         scale = Math.min(3, Math.max(1, dist / startDist));
         const img = document.getElementById('viewerImage');
         if (img) img.style.transform = `scale(${scale})`;
+        dragging = false;
+      } else if (dragging && !_viewerSliding) {
+        dragX = e.touches[0].clientX - startX;
+        const wrap = document.getElementById('viewerImageWrap');
+        if (wrap && Math.abs(dragX) > 10) {
+          // Dampen the drag slightly for a natural feel
+          wrap.style.transform = `translateX(${dragX * 0.6}px)`;
+          wrap.style.opacity = `${1 - Math.abs(dragX) / 600}`;
+        }
       }
     }, { passive: true });
 
-    viewerWrap.addEventListener('touchend', (e) => {
+    viewerSlideContainer.addEventListener('touchend', (e) => {
       if (scale > 1) {
         scale = 1;
         const img = document.getElementById('viewerImage');
         if (img) img.style.transform = 'scale(1)';
+        dragging = false;
         return;
       }
-      if (e.changedTouches.length === 1) {
+      const wrap = document.getElementById('viewerImageWrap');
+      if (dragging && e.changedTouches.length === 1) {
         const endX = e.changedTouches[0].clientX;
         const endY = e.changedTouches[0].clientY;
         const diffX = endX - startX;
         const diffY = endY - startY;
+
+        // Reset the drag transform
+        if (wrap) {
+          wrap.style.transition = '';
+          wrap.style.transform = '';
+          wrap.style.opacity = '';
+        }
+
         if (Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY)) {
           if (diffX < 0) viewerNext();
           else viewerPrev();
         }
+      } else if (wrap) {
+        wrap.style.transition = '';
+        wrap.style.transform = '';
+        wrap.style.opacity = '';
       }
+      dragging = false;
     });
   }
 
@@ -1383,43 +1612,124 @@ function bindEvents() {
     });
   });
 
-  // Slot-based photo selection — pick a pose for the active slot, auto-advance
+  // Selection tab switching (Pose / Crop / Favorites)
+  document.querySelectorAll('[data-action="sel-tab"]').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const t = tab.dataset.tab;
+      if (t === 'crop' && !state.selectionSlots[state.activeSlotIndex]?.photoId) return;
+      state.selectionTab = t;
+      render();
+    });
+  });
+
+  // Slot-based photo selection — pick a pose for the active slot
   document.querySelectorAll('[data-action="pick-pose"]').forEach(cell => {
     cell.addEventListener('click', () => {
       const photoId = cell.dataset.photoId;
       const slot = state.selectionSlots[state.activeSlotIndex];
       if (!slot) return;
-      // Toggle: if same photo, deselect; otherwise assign
       if (slot.photoId === photoId) {
+        // Deselect
         slot.photoId = null;
         state.selectedPhotos.delete(photoId);
-        render();
+        delete state.cropOffsets[state.activeSlotIndex];
+        state.selectionTab = 'pose';
       } else {
+        // Select new pose → auto-switch to crop
         slot.photoId = photoId;
         state.selectedPhotos.add(photoId);
-        render();
-        // Auto-advance after brief delay
-        setTimeout(() => {
-          const allFilled = state.selectionSlots.every(s => s.photoId);
-          if (allFilled) {
-            state.showReview = true;
-            render();
-          } else if (state.activeSlotIndex < state.selectionSlots.length - 1) {
-            state.activeSlotIndex++;
-            render();
-          }
-        }, 500);
+        state.cropOffsets[state.activeSlotIndex] = { tx: 0, ty: 0, confirmed: false };
+        state.selectionTab = 'crop';
       }
+      render();
     });
   });
 
-  // Prev slot navigation
-  document.querySelector('[data-action="prev-slot"]')?.addEventListener('click', () => {
-    if (state.activeSlotIndex > 0) {
-      state.activeSlotIndex--;
+  // Confirm & Next — move to next slot, reset to pose tab
+  document.querySelector('[data-action="next-slot"]')?.addEventListener('click', () => {
+    if (state.activeSlotIndex < state.selectionSlots.length - 1) {
+      state.activeSlotIndex++;
+      state.selectionTab = 'pose';
+      // Pre-init crop offset for next slot if it has a photo already
+      const nextSlot = state.selectionSlots[state.activeSlotIndex];
+      if (nextSlot?.photoId && !state.cropOffsets[state.activeSlotIndex]) {
+        state.cropOffsets[state.activeSlotIndex] = { tx: 0, ty: 0, confirmed: false };
+      }
       render();
     }
   });
+
+  document.querySelector('[data-action="show-review"]')?.addEventListener('click', () => {
+    state.showReview = true;
+    render();
+  });
+
+  // Crop confirm
+  document.querySelector('[data-action="crop-confirm"]')?.addEventListener('click', () => {
+    const offset = state.cropOffsets[state.activeSlotIndex];
+    if (offset) {
+      offset.confirmed = true;
+    } else {
+      state.cropOffsets[state.activeSlotIndex] = { tx: 0, ty: 0, confirmed: true };
+    }
+    render();
+  });
+
+  // Go to crop (footer button when crop not yet confirmed)
+  document.querySelector('[data-action="go-to-crop"]')?.addEventListener('click', () => {
+    state.selectionTab = 'crop';
+    render();
+  });
+
+  // Crop reset
+  document.querySelector('[data-action="crop-reset"]')?.addEventListener('click', () => {
+    const img = document.getElementById('selPreviewImg');
+    if (img) { img.style.transition = 'transform 0.3s ease'; img.style.transform = 'translate(0,0)'; }
+    // Reset stored offset
+    state.cropOffsets[state.activeSlotIndex] = { tx: 0, ty: 0, confirmed: false };
+  });
+
+  // Crop drag interaction
+  const cropPreview = document.querySelector('.sel-preview-crop');
+  if (cropPreview) {
+    const img = cropPreview.querySelector('img');
+    const existingOffset = state.cropOffsets[state.activeSlotIndex] || { tx: 0, ty: 0 };
+    let dragging = false, startX = 0, startY = 0;
+    let tx = existingOffset.tx, ty = existingOffset.ty;
+    let lastTx = tx, lastTy = ty;
+    const clamp = (v, min, max) => Math.min(Math.max(v, min), max);
+
+    // Apply existing offset on load
+    if (img && (tx !== 0 || ty !== 0)) {
+      img.style.transform = `translate(${tx}px, ${ty}px)`;
+    }
+
+    const onStart = (x, y) => { dragging = true; startX = x; startY = y; if (img) img.style.transition = 'none'; };
+    const onMove = (x, y) => {
+      if (!dragging) return;
+      tx = clamp(lastTx + (x - startX), -80, 80);
+      ty = clamp(lastTy + (y - startY), -100, 100);
+      if (img) img.style.transform = `translate(${tx}px, ${ty}px)`;
+    };
+    const onEnd = () => {
+      dragging = false;
+      lastTx = tx;
+      lastTy = ty;
+      // Save offset to state (un-confirm if they moved after confirming)
+      const offset = state.cropOffsets[state.activeSlotIndex];
+      if (offset) {
+        offset.tx = tx;
+        offset.ty = ty;
+      }
+    };
+
+    cropPreview.addEventListener('mousedown', e => { e.preventDefault(); onStart(e.clientX, e.clientY); });
+    window.addEventListener('mousemove', e => onMove(e.clientX, e.clientY));
+    window.addEventListener('mouseup', onEnd);
+    cropPreview.addEventListener('touchstart', e => { const t = e.touches[0]; onStart(t.clientX, t.clientY); }, { passive: true });
+    cropPreview.addEventListener('touchmove', e => { const t = e.touches[0]; onMove(t.clientX, t.clientY); }, { passive: true });
+    cropPreview.addEventListener('touchend', onEnd);
+  }
 
   // Selection back
   document.querySelector('[data-action="back-from-selection"]')?.addEventListener('click', goBack);
