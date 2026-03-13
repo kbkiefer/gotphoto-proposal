@@ -1,10 +1,31 @@
 import {
   PHOTOGRAPHER, GOTPHOTO_DEFAULTS, JOBS, STUDENTS, CATEGORIES, PACKAGES, PHOTOS,
-  GALLERY_JOBS, getPhotoUrl, getPhotoThumb, getGroupPhotoUrl, CLIENT_ACCOUNTS
+  GALLERY_JOBS, getPhotoUrl, getPhotoThumb, getGroupPhotoUrl, CLIENT_ACCOUNTS,
+  ALA_CARTE, ALA_CARTE_CATEGORIES
 } from '../data/mock.js';
 
 import { TEMPLATES, PACKAGE_TEMPLATES, getTemplatesForPackage } from '../templates/template-definitions.js';
 import { renderTemplate, renderThumbnail } from '../templates/template-renderer.js';
+
+// =========================================
+// GLOBAL: Block pinch-to-zoom except in gallery viewer & crop
+// =========================================
+document.addEventListener('touchmove', e => {
+  if (e.touches.length >= 2) {
+    const t = e.target;
+    if (t.closest('.sel-preview-crop') || t.closest('.photo-viewer')) return;
+    e.preventDefault();
+  }
+}, { passive: false });
+
+// Also block gesture events (Safari pinch) except in viewer & crop
+['gesturestart', 'gesturechange', 'gestureend'].forEach(evt => {
+  document.addEventListener(evt, e => {
+    const t = e.target;
+    if (t.closest('.sel-preview-crop') || t.closest('.photo-viewer')) return;
+    e.preventDefault();
+  }, { passive: false });
+});
 
 // =========================================
 // THEME — Apply photographer's brand colors
@@ -47,6 +68,10 @@ const state = {
   showReview: false,
   selectionTab: 'pose',    // 'pose' | 'crop' | 'favorites'
   cropOffsets: {},         // { slotIndex: { tx, ty } }
+  insideJob: false,          // true once a job is selected (gallery level)
+  alaCarteFilter: 'popular', // active à la carte category filter
+  alaCarteQty: {},           // { productId: quantity }
+  alaCarteSize: {},          // { productId: selectedSize }
 };
 
 const student = STUDENTS[0];
@@ -159,6 +184,7 @@ function buildScreens() {
     ${buildJobSelectorScreen()}
     ${buildGalleryScreen()}
     ${buildPackagesScreen()}
+    ${buildAlaCarteScreen()}
     ${buildSelectionScreen()}
     ${buildCartScreen()}
     ${buildCheckoutScreen()}
@@ -469,6 +495,114 @@ function buildPackagesScreen() {
 }
 
 // =========================================
+// À LA CARTE SCREEN
+// =========================================
+function buildAlaCarteScreen() {
+  const isActive = state.currentScreen === 'alacarte';
+  const filter = state.alaCarteFilter;
+  const photos = activePhotos();
+  const gj = activeGalleryJob();
+  const sampleUrl = getPhotoUrl(photos[0]?.file, gj);
+
+  const filterTabs = ALA_CARTE_CATEGORIES.map(cat =>
+    `<button class="alc-filter-tab ${filter === cat.id ? 'active' : ''}" data-alc-filter="${cat.id}">${cat.label}</button>`
+  ).join('');
+
+  // Filter products: 'popular' shows items marked popular, others filter by category
+  const filtered = ALA_CARTE.filter(p =>
+    filter === 'popular' ? p.popular : p.category === filter
+  );
+
+  const upsellBanner = `
+    <div class="alc-upsell">
+      <div class="alc-upsell-icon">
+        <img src="${sampleUrl}" alt="" style="width:48px;height:48px;object-fit:cover;border-radius:8px;">
+      </div>
+      <div class="alc-upsell-text">
+        <div class="alc-upsell-title">Save money with our package deals</div>
+        <button class="alc-upsell-link" data-action="alc-browse-packages">Browse packages →</button>
+      </div>
+    </div>`;
+
+  const productCards = filtered.map(product => {
+    const qty = state.alaCarteQty[product.id] || 1;
+    const selectedSize = state.alaCarteSize[product.id] || product.defaultSize || null;
+
+    const sizeSelector = product.sizes ? `
+      <div class="alc-size-row">
+        <select class="alc-size-select" data-alc-id="${product.id}">
+          ${product.sizes.map(s => `<option value="${s}" ${s === selectedSize ? 'selected' : ''}>${s}</option>`).join('')}
+        </select>
+        <div class="alc-qty-row">
+          <button class="alc-qty-btn" data-alc-qty-dec="${product.id}">−</button>
+          <span class="alc-qty-val">${qty}</span>
+          <button class="alc-qty-btn" data-alc-qty-inc="${product.id}">+</button>
+        </div>
+      </div>
+    ` : product.sizeLabel ? `
+      <div class="alc-size-row">
+        <div class="alc-size-fixed">One size: ${product.sizeLabel}</div>
+        <div class="alc-qty-row">
+          <button class="alc-qty-btn" data-alc-qty-dec="${product.id}">−</button>
+          <span class="alc-qty-val">${qty}</span>
+          <button class="alc-qty-btn" data-alc-qty-inc="${product.id}">+</button>
+        </div>
+      </div>
+    ` : `
+      <div class="alc-size-row">
+        <div></div>
+        <div class="alc-qty-row">
+          <button class="alc-qty-btn" data-alc-qty-dec="${product.id}">−</button>
+          <span class="alc-qty-val">${qty}</span>
+          <button class="alc-qty-btn" data-alc-qty-inc="${product.id}">+</button>
+        </div>
+      </div>
+    `;
+
+    return `
+      <div class="alc-product-card">
+        ${product.popular ? '<div class="alc-popular-badge">★ Popular</div>' : ''}
+        <div class="alc-product-header">
+          <div class="alc-product-name">${product.name}</div>
+          <div class="alc-product-price">${product.fromPrice ? 'From ' : ''}$${product.price.toFixed(2)}</div>
+        </div>
+        <div class="alc-product-desc">${product.desc}</div>
+        <div class="alc-product-body">
+          <div class="alc-product-photo">
+            <img src="${sampleUrl}" alt="${product.name}">
+          </div>
+          <div class="alc-product-controls">
+            <button class="alc-view-details" data-alc-details="${product.id}">View details</button>
+            ${sizeSelector}
+            <button class="alc-customize-btn" data-alc-customize="${product.id}">⊞ Customize photo</button>
+            <button class="alc-add-cart-btn" data-alc-add="${product.id}">🛒 Add to cart</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="screen ${isActive ? 'active' : ''}" data-screen="alacarte">
+      <div class="screen-header alc-header">
+        <button class="back-btn" data-action="alc-back">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div>
+          <h1>Select Products</h1>
+          <div class="subtitle">Build your own custom order</div>
+        </div>
+      </div>
+      <div class="alc-filter-row">${filterTabs}</div>
+      ${upsellBanner}
+      <div class="alc-section-label">${ALA_CARTE_CATEGORIES.find(c => c.id === filter)?.label || 'Products'}</div>
+      <div class="alc-product-list">
+        ${productCards}
+      </div>
+    </div>
+  `;
+}
+
+// =========================================
 // PHOTO SELECTION SCREEN — Slot-Based
 // =========================================
 
@@ -625,7 +759,7 @@ function buildSelectionScreen() {
     tabContentHtml = `
       <div class="sel-poses-section">
         <div class="sel-poses-title">${sectionTitle}</div>
-        <div class="sel-pose-strip">${showPhotos.map(buildPhotoCell).join('')}</div>
+        <div class="sel-pose-grid">${showPhotos.map(buildPhotoCell).join('')}</div>
       </div>
     `;
   } else if (selectionTab === 'crop') {
@@ -678,17 +812,13 @@ function buildSelectionScreen() {
 
       <div class="selection-footer">
         ${miniStripHtml}
-        ${allFilled && cropConfirmed ? `
+        ${allFilled ? `
           <button class="btn-continue btn-continue-pulse" data-action="show-review">
             Review & Add to Cart
           </button>
-        ` : activePhoto && cropConfirmed ? `
+        ` : activePhoto ? `
           <button class="btn-continue" data-action="next-slot">
             ${icons.check} Confirm & Next Photo
-          </button>
-        ` : activePhoto && !cropConfirmed ? `
-          <button class="btn-continue btn-continue-muted" data-action="go-to-crop">
-            Crop to Continue
           </button>
         ` : `
           <button class="btn-continue" disabled>
@@ -867,13 +997,22 @@ function buildAccountScreen() {
 // TAB BAR
 // =========================================
 function buildTabBar() {
-  const hidden = state.currentScreen === 'access' || state.currentScreen === 'jobs' || state.currentScreen === 'selection' || state.currentScreen === 'checkout';
-  const tabs = [
+  const hidden = state.currentScreen === 'access' || state.currentScreen === 'selection' || state.currentScreen === 'checkout';
+  const isJobsLevel = !state.insideJob;
+
+  const jobsTabs = [
+    { id: 'jobs', label: 'My Photos', icon: icons.gallery },
+    { id: 'account', label: 'Account', icon: icons.account },
+  ];
+
+  const galleryTabs = [
     { id: 'gallery', label: 'Gallery', icon: icons.gallery },
     { id: 'packages', label: 'Packages', icon: icons.packages },
     { id: 'cart', label: 'Cart', icon: icons.cart },
     { id: 'account', label: 'Account', icon: icons.account },
   ];
+
+  const tabs = isJobsLevel ? jobsTabs : galleryTabs;
 
   const el = document.createElement('nav');
   el.className = `tab-bar ${hidden ? 'hidden' : ''}`;
@@ -923,8 +1062,6 @@ function buildPhotoViewer() {
   el.innerHTML = `
     <div class="viewer-counter" id="viewerCounter">${state.viewerIndex + 1} of ${photos.length}</div>
     <button class="viewer-close" data-action="close-viewer">${icons.close}</button>
-    <button class="viewer-nav viewer-nav-prev" data-action="viewer-prev">${chevronLeft}</button>
-    <button class="viewer-nav viewer-nav-next" data-action="viewer-next">${chevronRight}</button>
     <div class="viewer-slide-container" id="viewerSlideContainer">
       <div class="viewer-image-wrap" id="viewerImageWrap">
         <img id="viewerImage" src="${photo ? getPhotoUrl(photo.file, gj) : ''}" alt="">
@@ -972,12 +1109,16 @@ function openSheet(pkgId) {
     <div class="sheet-templates-section">
       <div class="sheet-templates-label">Product Preview</div>
       <div class="sheet-templates-row">
-        ${sheetTemplates.map(tmpl => `
+        ${sheetTemplates.map(tmpl => {
+          // Scale width so all templates have ~same visual height (~120px)
+          const targetH = 120;
+          const w = Math.round(targetH * tmpl.aspect);
+          return `
           <div class="sheet-template-item">
-            <div class="sheet-template-render">${renderTemplate(tmpl.id, samplePhotoUrl, 100)}</div>
+            <div class="sheet-template-render">${renderTemplate(tmpl.id, samplePhotoUrl, w)}</div>
             <div class="sheet-template-name">${tmpl.name}</div>
-          </div>
-        `).join('')}
+          </div>`;
+        }).join('')}
       </div>
     </div>
   ` : '';
@@ -1044,7 +1185,8 @@ function navigate(screen, params = {}) {
   state.history.push(state.currentScreen);
   state.currentScreen = screen;
 
-  if (['gallery', 'packages', 'cart', 'account'].includes(screen)) {
+  if (screen === 'jobs') state.insideJob = false;
+  if (['jobs', 'gallery', 'packages', 'cart', 'account'].includes(screen)) {
     state.activeTab = screen;
   }
 
@@ -1072,7 +1214,8 @@ function navigate(screen, params = {}) {
 function goBack() {
   if (state.history.length > 0) {
     state.currentScreen = state.history.pop();
-    if (['gallery', 'packages', 'cart', 'account'].includes(state.currentScreen)) {
+    if (state.currentScreen === 'jobs') state.insideJob = false;
+    if (['jobs', 'gallery', 'packages', 'cart', 'account'].includes(state.currentScreen)) {
       state.activeTab = state.currentScreen;
     }
     render();
@@ -1101,7 +1244,6 @@ function openGroupViewer(url) {
   const navNext = viewer?.querySelector('.viewer-nav-next');
   if (img) img.src = url;
   if (counter) counter.style.display = 'none';
-  if (heartBtn) heartBtn.style.display = 'none';
   if (strip) strip.style.display = 'none';
   if (navPrev) navPrev.style.display = 'none';
   if (navNext) navNext.style.display = 'none';
@@ -1214,12 +1356,17 @@ function viewerSlide(direction, newIndex) {
 }
 
 function viewerNext() {
+  // Reset zoom before sliding
+  const img = document.getElementById('viewerImage');
+  if (img) { img.style.transition = 'none'; img.style.transform = ''; }
   const photos = activePhotos();
   const newIndex = (state.viewerIndex + 1) % photos.length;
   viewerSlide('next', newIndex);
 }
 
 function viewerPrev() {
+  const img = document.getElementById('viewerImage');
+  if (img) { img.style.transition = 'none'; img.style.transform = ''; }
   const photos = activePhotos();
   const newIndex = (state.viewerIndex - 1 + photos.length) % photos.length;
   viewerSlide('prev', newIndex);
@@ -1293,6 +1440,7 @@ function bindEvents() {
   document.querySelectorAll('[data-action="select-job"]').forEach(card => {
     card.addEventListener('click', () => {
       const idx = parseInt(card.dataset.jobIndex);
+      state.insideJob = true;
       navigate('gallery', { jobIndex: idx });
     });
   });
@@ -1300,6 +1448,8 @@ function bindEvents() {
   // Gallery back → jobs
   document.querySelector('[data-action="back-to-jobs"]')?.addEventListener('click', () => {
     state.currentScreen = 'jobs';
+    state.activeTab = 'jobs';
+    state.insideJob = false;
     state.history = ['access'];
     render();
   });
@@ -1414,8 +1564,12 @@ function bindEvents() {
     });
   });
 
-  // Viewer close
+  // Viewer close — X button or tap empty space
   document.querySelector('[data-action="close-viewer"]')?.addEventListener('click', closeViewer);
+  document.getElementById('photoViewer')?.addEventListener('click', e => {
+    if (e.target.closest('button, img, .viewer-strip, .viewer-actions')) return;
+    closeViewer();
+  });
 
   // Viewer heart
   document.querySelector('[data-action="viewer-like"]')?.addEventListener('click', () => {
@@ -1488,85 +1642,173 @@ function bindEvents() {
     });
   });
 
-  // Viewer swipe on slide container
+  // Viewer swipe + pinch-to-zoom + double-tap-to-zoom
   const viewerSlideContainer = document.getElementById('viewerSlideContainer');
   if (viewerSlideContainer) {
-    let startX = 0;
-    let startY = 0;
-    let scale = 1;
-    let startDist = 0;
-    let dragging = false;
-    let dragX = 0;
+    let startX = 0, startY = 0;
+    let scale = 1, lastScale = 1;
+    let dragging = false, dragX = 0;
+    let panX = 0, panY = 0, lastPanX = 0, lastPanY = 0;
+    let pinching = false, startDist = 0;
+    let lastTapTime = 0;
 
+    const getImg = () => document.getElementById('viewerImage');
+    const applyImgTransform = () => {
+      const img = getImg();
+      if (img) img.style.transform = `scale(${scale}) translate(${panX}px, ${panY}px)`;
+    };
+    const resetZoom = () => {
+      scale = 1; lastScale = 1; panX = 0; panY = 0; lastPanX = 0; lastPanY = 0;
+      const img = getImg();
+      if (img) { img.style.transition = 'transform 0.25s ease'; img.style.transform = 'scale(1) translate(0,0)'; }
+    };
+
+    // === Mouse wheel / trackpad pinch zoom (desktop) ===
+    viewerSlideContainer.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const img = getImg();
+      if (img) img.style.transition = 'none';
+      // Trackpad pinch sends wheel with ctrlKey; also support regular scroll-zoom
+      const delta = e.ctrlKey ? -e.deltaY * 0.01 : -e.deltaY * 0.003;
+      scale = Math.min(4, Math.max(1, scale + delta));
+      lastScale = scale;
+      applyImgTransform();
+      if (scale <= 1.05) { setTimeout(() => { if (scale <= 1.05) resetZoom(); }, 150); }
+    }, { passive: false });
+
+    // === Double-click to zoom (desktop) ===
+    viewerSlideContainer.addEventListener('dblclick', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const img = getImg();
+      if (img) img.style.transition = 'transform 0.25s ease';
+      if (scale > 1) { resetZoom(); }
+      else { scale = 2.5; lastScale = scale; panX = 0; panY = 0; lastPanX = 0; lastPanY = 0; applyImgTransform(); }
+    });
+
+    // === Safari GestureEvent API (iOS) ===
+    viewerSlideContainer.addEventListener('gesturestart', (e) => {
+      e.preventDefault();
+      pinching = true;
+      dragging = false;
+      lastScale = scale;
+      const img = getImg();
+      if (img) img.style.transition = 'none';
+    });
+    viewerSlideContainer.addEventListener('gesturechange', (e) => {
+      e.preventDefault();
+      scale = Math.min(4, Math.max(1, lastScale * e.scale));
+      applyImgTransform();
+    });
+    viewerSlideContainer.addEventListener('gestureend', (e) => {
+      e.preventDefault();
+      pinching = false;
+      lastScale = scale;
+      if (scale <= 1.05) resetZoom();
+    });
+
+    // === Touch events for swipe, pan, pinch fallback, and double-tap ===
     viewerSlideContainer.addEventListener('touchstart', (e) => {
+      const img = getImg();
+      if (img) img.style.transition = 'none';
       if (e.touches.length === 2) {
+        e.preventDefault();
+        pinching = true;
+        dragging = false;
         startDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-      } else {
+        lastScale = scale;
+      } else if (e.touches.length === 1) {
         startX = e.touches[0].clientX;
         startY = e.touches[0].clientY;
-        dragging = true;
-        dragX = 0;
+        if (!pinching) {
+          dragging = true;
+          dragX = 0;
+          lastPanX = panX;
+          lastPanY = panY;
+        }
         const wrap = document.getElementById('viewerImageWrap');
-        if (wrap) wrap.style.transition = 'none';
+        if (wrap && scale <= 1) wrap.style.transition = 'none';
       }
-    }, { passive: true });
+    }, { passive: false });
 
     viewerSlideContainer.addEventListener('touchmove', (e) => {
       if (e.touches.length === 2) {
+        e.preventDefault();
+        if (!pinching) {
+          pinching = true; dragging = false;
+          startDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+          lastScale = scale;
+        }
         const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-        scale = Math.min(3, Math.max(1, dist / startDist));
-        const img = document.getElementById('viewerImage');
-        if (img) img.style.transform = `scale(${scale})`;
+        scale = Math.min(4, Math.max(1, lastScale * (dist / startDist)));
+        applyImgTransform();
         dragging = false;
-      } else if (dragging && !_viewerSliding) {
-        dragX = e.touches[0].clientX - startX;
-        const wrap = document.getElementById('viewerImageWrap');
-        if (wrap && Math.abs(dragX) > 10) {
-          // Dampen the drag slightly for a natural feel
-          wrap.style.transform = `translateX(${dragX * 0.6}px)`;
-          wrap.style.opacity = `${1 - Math.abs(dragX) / 600}`;
+      } else if (e.touches.length === 1 && !pinching) {
+        const dx = e.touches[0].clientX - startX;
+        const dy = e.touches[0].clientY - startY;
+        if (scale > 1) {
+          e.preventDefault();
+          const maxPan = (scale - 1) * 150;
+          panX = Math.min(maxPan, Math.max(-maxPan, lastPanX + dx / scale));
+          panY = Math.min(maxPan, Math.max(-maxPan, lastPanY + dy / scale));
+          applyImgTransform();
+        } else if (dragging && !_viewerSliding) {
+          dragX = dx;
+          const wrap = document.getElementById('viewerImageWrap');
+          if (wrap && Math.abs(dragX) > 10) {
+            wrap.style.transform = `translateX(${dragX * 0.6}px)`;
+            wrap.style.opacity = `${1 - Math.abs(dragX) / 600}`;
+          }
         }
       }
-    }, { passive: true });
+    }, { passive: false });
 
     viewerSlideContainer.addEventListener('touchend', (e) => {
-      if (scale > 1) {
-        scale = 1;
-        const img = document.getElementById('viewerImage');
-        if (img) img.style.transform = 'scale(1)';
-        dragging = false;
+      if (pinching) {
+        pinching = false;
+        lastScale = scale;
+        if (scale <= 1.05) resetZoom();
         return;
       }
+      // Double-tap to zoom
+      if (e.changedTouches.length === 1) {
+        const dx = Math.abs(e.changedTouches[0].clientX - startX);
+        const dy = Math.abs(e.changedTouches[0].clientY - startY);
+        if (dx < 15 && dy < 15) {
+          const now = Date.now();
+          if (now - lastTapTime < 350) {
+            lastTapTime = 0;
+            e.preventDefault();
+            const img = getImg();
+            if (img) img.style.transition = 'transform 0.25s ease';
+            if (scale > 1) { resetZoom(); }
+            else { scale = 2.5; lastScale = scale; panX = 0; panY = 0; lastPanX = 0; lastPanY = 0; applyImgTransform(); }
+            dragging = false;
+            return;
+          }
+          lastTapTime = now;
+        }
+      }
+      if (scale > 1) { lastPanX = panX; lastPanY = panY; dragging = false; return; }
       const wrap = document.getElementById('viewerImageWrap');
       if (dragging && e.changedTouches.length === 1) {
-        const endX = e.changedTouches[0].clientX;
-        const endY = e.changedTouches[0].clientY;
-        const diffX = endX - startX;
-        const diffY = endY - startY;
-
-        // Reset the drag transform
-        if (wrap) {
-          wrap.style.transition = '';
-          wrap.style.transform = '';
-          wrap.style.opacity = '';
-        }
-
+        const diffX = e.changedTouches[0].clientX - startX;
+        const diffY = e.changedTouches[0].clientY - startY;
+        if (wrap) { wrap.style.transition = ''; wrap.style.transform = ''; wrap.style.opacity = ''; }
         if (Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY)) {
-          if (diffX < 0) viewerNext();
-          else viewerPrev();
+          if (diffX < 0) viewerNext(); else viewerPrev();
         }
-      } else if (wrap) {
-        wrap.style.transition = '';
-        wrap.style.transform = '';
-        wrap.style.opacity = '';
-      }
+      } else if (wrap) { wrap.style.transition = ''; wrap.style.transform = ''; wrap.style.opacity = ''; }
       dragging = false;
     });
   }
 
   // Package cards → open sheet
   document.querySelectorAll('.package-card').forEach(card => {
-    card.addEventListener('click', () => openSheet(card.dataset.pkgId));
+    card.addEventListener('click', () => {
+      if (card.dataset.pkgId === 'pkg-007') { navigate('alacarte'); return; }
+      openSheet(card.dataset.pkgId);
+    });
   });
 
   // Sheet backdrop close
@@ -1612,6 +1854,62 @@ function bindEvents() {
     });
   });
 
+  // À la carte bindings
+  document.querySelector('[data-action="alc-back"]')?.addEventListener('click', goBack);
+  document.querySelector('[data-action="alc-browse-packages"]')?.addEventListener('click', () => navigate('packages'));
+
+  document.querySelectorAll('.alc-filter-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      state.alaCarteFilter = tab.dataset.alcFilter;
+      render();
+    });
+  });
+
+  document.querySelectorAll('[data-alc-qty-inc]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.alcQtyInc;
+      state.alaCarteQty[id] = (state.alaCarteQty[id] || 1) + 1;
+      render();
+    });
+  });
+
+  document.querySelectorAll('[data-alc-qty-dec]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.alcQtyDec;
+      state.alaCarteQty[id] = Math.max(1, (state.alaCarteQty[id] || 1) - 1);
+      render();
+    });
+  });
+
+  document.querySelectorAll('.alc-size-select').forEach(sel => {
+    sel.addEventListener('change', () => {
+      state.alaCarteSize[sel.dataset.alcId] = sel.value;
+    });
+  });
+
+  document.querySelectorAll('[data-alc-add]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const product = ALA_CARTE.find(p => p.id === btn.dataset.alcAdd);
+      if (!product) return;
+      const qty = state.alaCarteQty[product.id] || 1;
+      const size = state.alaCarteSize[product.id] || product.defaultSize || '';
+      // Add as cart item
+      const cartItem = {
+        id: `alc-${Date.now()}`,
+        name: `${product.name}${size ? ' (' + size + ')' : ''}`,
+        price: product.price,
+        quantity: qty,
+        photos: [activePhotos()[0]?.id],
+        isAlaCarte: true,
+      };
+      state.cart.push(cartItem);
+      // Brief feedback
+      btn.textContent = '✓ Added!';
+      btn.style.background = '#10b981';
+      setTimeout(() => render(), 800);
+    });
+  });
+
   // Selection tab switching (Pose / Crop / Favorites)
   document.querySelectorAll('[data-action="sel-tab"]').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -1635,11 +1933,10 @@ function bindEvents() {
         delete state.cropOffsets[state.activeSlotIndex];
         state.selectionTab = 'pose';
       } else {
-        // Select new pose → auto-switch to crop
+        // Select new pose — stay on pose tab, user can switch to crop manually
         slot.photoId = photoId;
         state.selectedPhotos.add(photoId);
-        state.cropOffsets[state.activeSlotIndex] = { tx: 0, ty: 0, confirmed: false };
-        state.selectionTab = 'crop';
+        state.cropOffsets[state.activeSlotIndex] = { tx: 0, ty: 0, scale: 1, confirmed: false };
       }
       render();
     });
@@ -1653,7 +1950,7 @@ function bindEvents() {
       // Pre-init crop offset for next slot if it has a photo already
       const nextSlot = state.selectionSlots[state.activeSlotIndex];
       if (nextSlot?.photoId && !state.cropOffsets[state.activeSlotIndex]) {
-        state.cropOffsets[state.activeSlotIndex] = { tx: 0, ty: 0, confirmed: false };
+        state.cropOffsets[state.activeSlotIndex] = { tx: 0, ty: 0, scale: 1, confirmed: false };
       }
       render();
     }
@@ -1670,7 +1967,7 @@ function bindEvents() {
     if (offset) {
       offset.confirmed = true;
     } else {
-      state.cropOffsets[state.activeSlotIndex] = { tx: 0, ty: 0, confirmed: true };
+      state.cropOffsets[state.activeSlotIndex] = { tx: 0, ty: 0, scale: 1, confirmed: true };
     }
     render();
   });
@@ -1684,51 +1981,104 @@ function bindEvents() {
   // Crop reset
   document.querySelector('[data-action="crop-reset"]')?.addEventListener('click', () => {
     const img = document.getElementById('selPreviewImg');
-    if (img) { img.style.transition = 'transform 0.3s ease'; img.style.transform = 'translate(0,0)'; }
+    if (img) { img.style.transition = 'transform 0.3s ease'; img.style.transform = 'translate(0,0) scale(1)'; }
     // Reset stored offset
-    state.cropOffsets[state.activeSlotIndex] = { tx: 0, ty: 0, confirmed: false };
+    state.cropOffsets[state.activeSlotIndex] = { tx: 0, ty: 0, scale: 1, confirmed: false };
   });
 
-  // Crop drag interaction
+  // Crop drag + pinch-to-zoom interaction
   const cropPreview = document.querySelector('.sel-preview-crop');
   if (cropPreview) {
     const img = cropPreview.querySelector('img');
-    const existingOffset = state.cropOffsets[state.activeSlotIndex] || { tx: 0, ty: 0 };
+    const existingOffset = state.cropOffsets[state.activeSlotIndex] || { tx: 0, ty: 0, scale: 1 };
     let dragging = false, startX = 0, startY = 0;
     let tx = existingOffset.tx, ty = existingOffset.ty;
-    let lastTx = tx, lastTy = ty;
+    let scale = existingOffset.scale || 1;
+    let lastTx = tx, lastTy = ty, lastScale = scale;
+    let pinching = false, startDist = 0;
     const clamp = (v, min, max) => Math.min(Math.max(v, min), max);
 
+    const applyTransform = () => {
+      if (img) img.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+    };
+
     // Apply existing offset on load
-    if (img && (tx !== 0 || ty !== 0)) {
-      img.style.transform = `translate(${tx}px, ${ty}px)`;
+    if (img && (tx !== 0 || ty !== 0 || scale !== 1)) {
+      applyTransform();
     }
+
+    const saveOffset = () => {
+      const offset = state.cropOffsets[state.activeSlotIndex];
+      if (offset) { offset.tx = tx; offset.ty = ty; offset.scale = scale; }
+    };
 
     const onStart = (x, y) => { dragging = true; startX = x; startY = y; if (img) img.style.transition = 'none'; };
     const onMove = (x, y) => {
-      if (!dragging) return;
-      tx = clamp(lastTx + (x - startX), -80, 80);
-      ty = clamp(lastTy + (y - startY), -100, 100);
-      if (img) img.style.transform = `translate(${tx}px, ${ty}px)`;
+      if (!dragging || pinching) return;
+      const maxPan = 40 + (scale - 1) * 60;
+      tx = clamp(lastTx + (x - startX), -maxPan, maxPan);
+      ty = clamp(lastTy + (y - startY), -maxPan * 1.25, maxPan * 1.25);
+      applyTransform();
     };
     const onEnd = () => {
       dragging = false;
-      lastTx = tx;
-      lastTy = ty;
-      // Save offset to state (un-confirm if they moved after confirming)
-      const offset = state.cropOffsets[state.activeSlotIndex];
-      if (offset) {
-        offset.tx = tx;
-        offset.ty = ty;
-      }
+      lastTx = tx; lastTy = ty;
+      saveOffset();
     };
 
+    // Mouse events
     cropPreview.addEventListener('mousedown', e => { e.preventDefault(); onStart(e.clientX, e.clientY); });
     window.addEventListener('mousemove', e => onMove(e.clientX, e.clientY));
     window.addEventListener('mouseup', onEnd);
-    cropPreview.addEventListener('touchstart', e => { const t = e.touches[0]; onStart(t.clientX, t.clientY); }, { passive: true });
-    cropPreview.addEventListener('touchmove', e => { const t = e.touches[0]; onMove(t.clientX, t.clientY); }, { passive: true });
-    cropPreview.addEventListener('touchend', onEnd);
+
+    // Mouse wheel / trackpad pinch zoom
+    cropPreview.addEventListener('wheel', e => {
+      e.preventDefault();
+      if (img) img.style.transition = 'none';
+      const delta = e.ctrlKey ? -e.deltaY * 0.01 : -e.deltaY * 0.003;
+      scale = clamp(scale + delta, 1, 3);
+      lastScale = scale;
+      applyTransform();
+      saveOffset();
+    }, { passive: false });
+
+    // Touch events — single finger pan, two finger pinch-to-zoom
+    cropPreview.addEventListener('touchstart', e => {
+      e.preventDefault();
+      if (e.touches.length === 2) {
+        pinching = true;
+        dragging = false;
+        startDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+        lastScale = scale;
+        if (img) img.style.transition = 'none';
+      } else if (e.touches.length === 1) {
+        pinching = false;
+        const t = e.touches[0];
+        onStart(t.clientX, t.clientY);
+      }
+    }, { passive: false });
+
+    cropPreview.addEventListener('touchmove', e => {
+      e.preventDefault();
+      if (e.touches.length === 2 && pinching) {
+        const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+        scale = clamp(lastScale * (dist / startDist), 1, 3);
+        applyTransform();
+      } else if (e.touches.length === 1 && !pinching) {
+        const t = e.touches[0];
+        onMove(t.clientX, t.clientY);
+      }
+    }, { passive: false });
+
+    cropPreview.addEventListener('touchend', e => {
+      if (pinching) {
+        pinching = false;
+        lastScale = scale;
+        saveOffset();
+        return;
+      }
+      onEnd();
+    });
   }
 
   // Selection back

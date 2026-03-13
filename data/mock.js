@@ -208,6 +208,24 @@ export const PACKAGES = [
   }
 ];
 
+// À la carte individual products (Build Your Own)
+export const ALA_CARTE = [
+  { id: 'alc-001', name: 'Print', category: 'popular', price: 10, fromPrice: true, sizes: ['4×6', '5×7', '8×10', '11×14'], defaultSize: '8×10', popular: true, desc: 'Taxes and shipping calculated at checkout' },
+  { id: 'alc-002', name: 'Wallet Prints', category: 'prints', price: 18, fromPrice: false, sizes: null, sizeLabel: '8 — 2.5×3.5', popular: false, desc: 'Taxes and shipping calculated at checkout' },
+  { id: 'alc-003', name: 'Sheet of 2 Prints', category: 'prints', price: 15, fromPrice: false, sizes: null, sizeLabel: '2 — 5×7', popular: false, desc: 'Taxes and shipping calculated at checkout' },
+  { id: 'alc-004', name: 'Canvas Print', category: 'prints', price: 45, fromPrice: true, sizes: ['11×14', '16×20', '20×24'], defaultSize: '16×20', popular: false, desc: 'Gallery-wrapped canvas' },
+  { id: 'alc-005', name: 'Digital Download', category: 'popular', price: 25, fromPrice: false, sizes: null, popular: true, desc: 'High-resolution digital file' },
+  { id: 'alc-006', name: 'Photo Mug', category: 'gifts', price: 22, fromPrice: false, sizes: null, popular: false, desc: '11oz ceramic mug' },
+  { id: 'alc-007', name: 'Photo Magnet', category: 'gifts', price: 12, fromPrice: false, sizes: null, popular: false, desc: '3×4 premium magnet' },
+  { id: 'alc-008', name: 'Keychain', category: 'gifts', price: 8, fromPrice: false, sizes: null, popular: false, desc: 'Acrylic photo keychain' },
+];
+
+export const ALA_CARTE_CATEGORIES = [
+  { id: 'popular', label: 'Popular' },
+  { id: 'prints', label: 'Prints' },
+  { id: 'gifts', label: 'Gifts' },
+];
+
 // Gallery jobs — real photo jobs, reverse chronological (newest first)
 // All photos are of Angie Kiefer, kindergarten through 4th grade at United Day School
 export const GALLERY_JOBS = [

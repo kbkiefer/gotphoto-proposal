@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<style>
+body { margin: 0; background: #111; color: #fff; font-family: system-ui; touch-action: pan-x pan-y; }
+.box {
+  width: 90vw; height: 70vh; margin: 5vh auto;
+  background: #333; display: flex; align-items: center; justify-content: center;
+  touch-action: none; overflow: hidden; border-radius: 12px;
+}
+.box img {
+  max-width: 100%; max-height: 100%; object-fit: contain;
+  transform-origin: center center; user-select: none; -webkit-user-drag: none;
+}
+#log { padding: 10px; font-size: 12px; max-height: 20vh; overflow-y: auto; }
+</style>
+</head>
+<body>
+<div class="box" id="box">
+  <img id="img" src="../photos/senior/angie-001.jpg" alt="test">
+</div>
+<div id="log">Touch the image to test zoom...</div>
+<script>
+const box = document.getElementById('box');
+const img = document.getElementById('img');
+const log = document.getElementById('log');
+let scale = 1, lastScale = 1, panX = 0, panY = 0, lastPanX = 0, lastPanY = 0;
+let startX = 0, startY = 0, startDist = 0, pinching = false, lastTap = 0;
+
+function l(msg) { log.innerHTML = msg + '<br>' + log.innerHTML; }
+function apply() { img.style.transform = `scale(${scale}) translate(${panX}px, ${panY}px)`; }
+
+// Safari gesture events
+box.addEventListener('gesturestart', e => { e.preventDefault(); pinching = true; lastScale = scale; img.style.transition = 'none'; l('gesturestart'); });
+box.addEventListener('gesturechange', e => { e.preventDefault(); scale = Math.min(4, Math.max(1, lastScale * e.scale)); apply(); l('gesturechange s=' + scale.toFixed(2)); });
+box.addEventListener('gestureend', e => { e.preventDefault(); pinching = false; lastScale = scale; if (scale < 1.05) { scale = 1; lastScale = 1; panX = 0; panY = 0; img.style.transition = 'transform 0.2s'; img.style.transform = 'scale(1)'; } l('gestureend'); });
+
+// Touch events
+box.addEventListener('touchstart', e => {
+  img.style.transition = 'none';
+  l('touchstart fingers=' + e.touches.length);
+  if (e.touches.length === 2) {
+    e.preventDefault();
+    pinching = true;
+    startDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    lastScale = scale;
+  } else {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    lastPanX = panX; lastPanY = panY;
+  }
+}, { passive: false });
+
+box.addEventListener('touchmove', e => {
+  if (e.touches.length === 2) {
+    e.preventDefault();
+    if (!pinching) { pinching = true; startDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); lastScale = scale; }
+    const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    scale = Math.min(4, Math.max(1, lastScale * (dist / startDist)));
+    apply();
+    l('pinch s=' + scale.toFixed(2));
+  } else if (e.touches.length === 1 && !pinching && scale > 1) {
+    e.preventDefault();
+    const maxP = (scale - 1) * 150;
+    panX = Math.min(maxP, Math.max(-maxP, lastPanX + (e.touches[0].clientX - startX) / scale));
+    panY = Math.min(maxP, Math.max(-maxP, lastPanY + (e.touches[0].clientY - startY) / scale));
+    apply();
+  }
+}, { passive: false });
+
+box.addEventListener('touchend', e => {
+  if (pinching) { pinching = false; lastScale = scale; if (scale < 1.05) { scale = 1; lastScale = 1; panX = 0; panY = 0; img.style.transition = 'transform 0.2s'; img.style.transform = 'scale(1)'; } l('pinch-end'); return; }
+  // Double-tap
+  if (e.changedTouches.length === 1) {
+    const dx = Math.abs(e.changedTouches[0].clientX - startX);
+    const dy = Math.abs(e.changedTouches[0].clientY - startY);
+    if (dx < 15 && dy < 15) {
+      const now = Date.now();
+      if (now - lastTap < 350) {
+        lastTap = 0;
+        img.style.transition = 'transform 0.25s ease';
+        if (scale > 1) { scale = 1; lastScale = 1; panX = 0; panY = 0; img.style.transform = 'scale(1)'; l('double-tap reset'); }
+        else { scale = 2.5; lastScale = 2.5; panX = 0; panY = 0; apply(); l('double-tap zoom'); }
+        return;
+      }
+      lastTap = now;
+    }
+  }
+  l('touchend');
+});
+
+l('Ready. Try pinch or double-tap on the image.');
+</script>
+</body>
+</html>
