@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Uncomment to re-capture to Figma: <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script> -->
+  <title>Product Templates — ChoicePix</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: #f0ece4;
+      color: #1a1a2e;
+      padding: 48px;
+      -webkit-font-smoothing: antialiased;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      color: #6b7280;
+      font-size: 15px;
+      margin-bottom: 48px;
+    }
+    .section {
+      margin-bottom: 64px;
+    }
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #9ca3af;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #d1d5db;
+    }
+    .template-row {
+      display: flex;
+      gap: 40px;
+      flex-wrap: wrap;
+      align-items: flex-end;
+    }
+    .template-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .template-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #4b5563;
+    }
+    .template-label span {
+      font-weight: 400;
+      color: #9ca3af;
+      font-size: 11px;
+    }
+
+    /* Placeholder photo style — used when no real photo is provided */
+    .tmpl-slot img[src=""] ,
+    .tmpl-slot img:not([src]) {
+      background: linear-gradient(145deg, #d4a574 0%, #c2956b 40%, #8b6f5a 100%);
+    }
+
+    .tmpl-slot img {
+      background: #e5ddd4;
+    }
+
+    /* Photo placeholder with silhouette */
+    .placeholder-photo {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(145deg, #d4a574 0%, #c2956b 40%, #8b6f5a 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .placeholder-photo::before {
+      content: '';
+      width: 40%;
+      height: 35%;
+      background: radial-gradient(ellipse, rgba(0,0,0,0.12) 0%, transparent 70%);
+      border-radius: 50%;
+      position: absolute;
+      top: 15%;
+    }
+    .placeholder-photo::after {
+      content: '';
+      width: 50%;
+      height: 50%;
+      background: radial-gradient(ellipse at top, rgba(0,0,0,0.08) 0%, transparent 60%);
+      border-radius: 40% 40% 0 0;
+      position: absolute;
+      bottom: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Product Templates</h1>
+  <p class="subtitle">ChoicePix Photography — product visualization system. Each template has photo placeholder slots that dynamically composite client photos.</p>
+
+  <div id="gallery"></div>
+
+  <script type="module">
+    import { TEMPLATES } from './template-definitions.js';
+    import { renderTemplate } from './template-renderer.js';
+
+    // Sample photos — use picsum with portrait-style seeds
+    const samplePhotos = [
+      'https://picsum.photos/seed/senior-portrait-1/400/533',
+      'https://picsum.photos/seed/senior-portrait-2/400/533',
+      'https://picsum.photos/seed/senior-portrait-3/400/533',
+      'https://picsum.photos/seed/senior-portrait-4/400/533',
+    ];
+
+    const gallery = document.getElementById('gallery');
+
+    // Group templates by type
+    const groups = {};
+    Object.values(TEMPLATES).forEach(t => {
+      if (!groups[t.type]) groups[t.type] = [];
+      groups[t.type].push(t);
+    });
+
+    const typeLabels = {
+      'print': 'Prints',
+      'wallet': 'Wallet Prints',
+      'canvas': 'Canvas Wraps',
+      'frame': 'Framed Prints',
+      'collage': 'Collages',
+      'digital': 'Digital Downloads',
+      'wall-set': 'Wall Sets',
+    };
+
+    const typeSizes = {
+      'print': 220,
+      'wallet': 240,
+      'canvas': 240,
+      'frame': 220,
+      'collage': 280,
+      'digital': 180,
+      'wall-set': 400,
+    };
+
+    Object.entries(groups).forEach(([type, templates]) => {
+      const section = document.createElement('div');
+      section.className = 'section';
+
+      const title = document.createElement('div');
+      title.className = 'section-title';
+      title.textContent = typeLabels[type] || type;
+      section.appendChild(title);
+
+      const row = document.createElement('div');
+      row.className = 'template-row';
+
+      templates.forEach(tmpl => {
+        const item = document.createElement('div');
+        item.className = 'template-item';
+
+        const size = typeSizes[type] || 240;
+        const photos = tmpl.slots.length > 1
+          ? samplePhotos.slice(0, tmpl.slots.length)
+          : [samplePhotos[0]];
+
+        const rendered = renderTemplate(tmpl.id, photos, size);
+
+        const wrap = document.createElement('div');
+        wrap.innerHTML = rendered;
+        item.appendChild(wrap.firstElementChild || wrap);
+
+        const label = document.createElement('div');
+        label.className = 'template-label';
+        label.innerHTML = `${tmpl.name} <span>${tmpl.slots.length} slot${tmpl.slots.length > 1 ? 's' : ''}</span>`;
+        item.appendChild(label);
+
+        row.appendChild(item);
+      });
+
+      section.appendChild(row);
+      gallery.appendChild(section);
+    });
+  </script>
+</body>
+</html>

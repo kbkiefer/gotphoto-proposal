@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GotPhoto App System Proposal — ShalaWorks</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="presentation">
+
+  <!-- SLIDE 1: Title -->
+  <div class="slide title-slide">
+    <div class="slide-inner" style="text-align:center;">
+      <div class="logos fade-in-up" style="justify-content:center;">
+        <span>ShalaWorks</span>
+        <span class="divider">&times;</span>
+        <span>GotPhoto</span>
+      </div>
+      <h1 class="fade-in-up">GotPhoto App<br>System Proposal</h1>
+      <p class="subtitle fade-in-up">A partnership to reimagine photography commerce</p>
+      <p class="tagline fade-in-up">"Reimagining the photography commerce experience"</p>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: The Opportunity -->
+  <div class="slide">
+    <div class="slide-inner">
+      <span class="badge badge-accent fade-in-up">The Opportunity</span>
+      <h2 class="fade-in-up">The platform <em>is</em> the product</h2>
+      <div class="stats-row fade-in-up">
+        <div class="stat">
+          <div class="stat-value">78%</div>
+          <div class="stat-label">Mobile traffic from parents</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">34+</div>
+          <div class="stat-label">Packages per storefront</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">3x</div>
+          <div class="stat-label">Potential AOV increase</div>
+        </div>
+      </div>
+      <ul class="feature-list fade-in-up">
+        <li><span class="check">&#10003;</span> GotPhoto serves thousands of photographers — parents interact with GotPhoto's storefront, not the photographer's brand</li>
+        <li><span class="check">&#10003;</span> The storefront experience directly impacts conversion rates and average order value</li>
+        <li><span class="check">&#10003;</span> Mobile traffic dominates but the experience isn't mobile-first</li>
+        <li><span class="check">&#10003;</span> Every UX improvement compounds across the entire photographer base</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: Current State Analysis -->
+  <div class="slide">
+    <div class="slide-inner">
+      <span class="badge badge-orange fade-in-up">Current State</span>
+      <h2 class="fade-in-up">Where friction lives</h2>
+      <div class="two-col fade-in-up">
+        <div>
+          <div class="pain-card">
+            <div class="pain-label">Pain Point</div>
+            <p><strong>34 packages in a flat scroll</strong> — no categories, no filtering, no guidance. Parents scroll endlessly or give up.</p>
+          </div>
+          <div class="pain-card">
+            <div class="pain-label">Pain Point</div>
+            <p><strong>Cryptic package names</strong> — "Seniors - Package 3b" tells parents nothing about what they're buying.</p>
+          </div>
+          <div class="pain-card">
+            <div class="pain-label">Pain Point</div>
+            <p><strong>No visual product previews</strong> — parents can't see what a canvas or frame will look like before they buy.</p>
+          </div>
+          <div class="pain-card">
+            <div class="pain-label">Pain Point</div>
+            <p><strong>Expired archiving countdowns still visible</strong> — creates confusion instead of urgency.</p>
+          </div>
+        </div>
+        <div>
+          <!-- Current storefront mockup -->
+          <div class="phone-frame">
+            <div class="phone-notch"></div>
+            <div class="phone-content">
+              <div style="font-size:0.6rem; color:var(--text-muted); margin-bottom:0.5rem; text-align:center;">gotphoto.com/s/...</div>
+              <div style="font-size:0.7rem; font-weight:600; margin-bottom:0.6rem; color:var(--text);">Select a Package</div>
+              <div class="mock-package"><span class="pkg-name">Seniors - Package 1</span><span class="pkg-price">$45.00</span></div>
+              <div class="mock-package"><span class="pkg-name">Seniors - Package 2</span><span class="pkg-price">$75.00</span></div>
+              <div class="mock-package"><span class="pkg-name">Seniors - Package 2a</span><span class="pkg-price">$85.00</span></div>
+              <div class="mock-package"><span class="pkg-name">Seniors - Package 3</span><span class="pkg-price">$125.00</span></div>
+              <div class="mock-package"><span class="pkg-name">Seniors - Package 3b</span><span class="pkg-price">$135.00</span></div>
+              <div class="mock-package"><span class="pkg-name">Seniors - Pkg 4 Deluxe</span><span class="pkg-price">$175.00</span></div>
+              <div class="mock-package"><span class="pkg-name">Seniors - Canvas 8x10</span><span class="pkg-price">$89.00</span></div>
+              <div class="mock-package"><span class="pkg-name">Seniors - Digital Only</span><span class="pkg-price">$199.00</span></div>
+              <div class="mock-package" style="opacity:0.5"><span class="pkg-name">Seniors - Package 5...</span><span class="pkg-price">$225.00</span></div>
+              <div style="text-align:center; font-size:0.55rem; color:var(--text-muted); margin-top:0.4rem;">&#8595; 26 more packages below</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: Proposed Architecture Overview -->
+  <div class="slide">
+    <div class="slide-inner">
+      <span class="badge badge-green fade-in-up">Proposed System</span>
+      <h2 class="fade-in-up">Four pillars of improvement</h2>
+      <p class="fade-in-up" style="color:var(--text-muted);">A comprehensive approach touching every surface of the platform.</p>
+      <div class="arch-diagram fade-in-up">
+        <div class="arch-pillar p1">
+          <div class="pillar-number">Pillar 1</div>
+          <h3>Client Storefront UX</h3>
+          <p style="font-size:0.85rem; color:var(--text-muted);">Smart discovery, guided selection, visual previews</p>
+          <ul class="pillar-items">
+            <li>Categorized package browsing</li>
+            <li>Step-by-step purchase wizard</li>
+            <li>Live product previews</li>
+            <li>Optimized checkout</li>
+          </ul>
+        </div>
+        <div class="arch-pillar p2">
+          <div class="pillar-number">Pillar 2</div>
+          <h3>Mobile App Experience</h3>
+          <p style="font-size:0.85rem; color:var(--text-muted);">PWA/native, push notifications, family sharing</p>
+          <ul class="pillar-items">
+            <li>Installable PWA</li>
+            <li>Full-screen photo browsing</li>
+            <li>Apple Pay / Google Pay</li>
+            <li>Family sharing & gifting</li>
+          </ul>
+        </div>
+        <div class="arch-pillar p3">
+          <div class="pillar-number">Pillar 3</div>
+          <h3>Admin Improvements</h3>
+          <p style="font-size:0.85rem; color:var(--text-muted);">Live preview, analytics, smart campaigns</p>
+          <ul class="pillar-items">
+            <li>Live storefront preview</li>
+            <li>Visual package builder</li>
+            <li>Real-time analytics</li>
+            <li>Campaign intelligence</li>
+          </ul>
+        </div>
+        <div class="arch-pillar p4">
+          <div class="pillar-number">Pillar 4</div>
+          <h3>Integration / API Layer</h3>
+          <p style="font-size:0.85rem; color:var(--text-muted);">Modern APIs, developer platform, data intelligence</p>
+          <ul class="pillar-items">
+            <li>REST + GraphQL APIs</li>
+            <li>Webhook events</li>
+            <li>Embeddable widgets</li>
+            <li>Predictive analytics</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: Smart Package Discovery (Pillar 1) -->
+  <div class="slide slide-divider">
+    <div class="slide-inner section-header">
+      <div class="section-icon fade-in-up">&#128722;</div>
+      <div class="pillar-num fade-in-up">Pillar 1 &mdash; Client Storefront UX</div>
+      <h2 class="fade-in-up">Smart Package Discovery</h2>
+      <p class="lead fade-in-up">Replace the flat list with intelligent browsing that guides parents to the right package.</p>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: Package Discovery Detail -->
+  <div class="slide">
+    <div class="slide-inner">
+      <h2 class="fade-in-up">From overwhelming to intuitive</h2>
+      <div class="comparison fade-in-up">
+        <div class="comparison-side comparison-before">
+          <div class="comp-label">Current: Flat List</div>
+          <div class="mock-package"><span class="pkg-name">Seniors - Package 1</span><span class="pkg-price">$45</span></div>
+          <div class="mock-package"><span class="pkg-name">Seniors - Package 2</span><span class="pkg-price">$75</span></div>
+          <div class="mock-package"><span class="pkg-name">Seniors - Package 2a</span><span class="pkg-price">$85</span></div>
+          <div class="mock-package"><span class="pkg-name">Seniors - Package 3</span><span class="pkg-price">$125</span></div>
+          <div class="mock-package"><span class="pkg-name">Seniors - Package 3b</span><span class="pkg-price">$135</span></div>
+          <div style="text-align:center; font-size:0.75rem; color:var(--text-muted); padding:0.5rem;">...29 more</div>
+        </div>
+        <div class="comparison-side comparison-after">
+          <div class="comp-label">Proposed: Smart Categories</div>
+          <div class="mock-tabs">
+            <div class="mock-tab active">Digital</div>
+            <div class="mock-tab">Prints</div>
+            <div class="mock-tab">Canvas</div>
+            <div class="mock-tab">Frames</div>
+            <div class="mock-tab">Build</div>
+          </div>
+          <div class="mock-package" style="border-left:2px solid var(--accent);">
+            <span class="pkg-name" style="color:var(--text);">Digital Collection</span>
+            <span class="pkg-price" style="color:var(--green);">$199</span>
+          </div>
+          <div class="mock-package" style="border-left:2px solid var(--accent);">
+            <span class="pkg-name" style="color:var(--text);">Digital + 5 Prints</span>
+            <span class="pkg-price" style="color:var(--green);">$249</span>
+          </div>
+          <div style="font-size:0.7rem; color:var(--accent-light); padding:0.6rem 0.5rem; display:flex; align-items:center; gap:0.3em;">
+            &#9733; Recommended for you
+          </div>
+        </div>
+      </div>
+      <div class="card-grid cols-3 fade-in-up" style="margin-top:1.5rem;">
+        <div class="card">
+          <h3>Category Browsing</h3>
+          <p>Digital | Prints | Canvas | Frames | Build Your Own</p>
+        </div>
+        <div class="card">
+          <h3>Price Tier Filters</h3>
+          <p>Budget ($0-100) | Mid ($100-250) | Premium ($250+)</p>
+        </div>
+        <div class="card">
+          <h3>Smart Recommendations</h3>
+          <p>Based on what other parents ordered for this job type</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: Guided Selection Flow -->
+  <div class="slide">
+    <div class="slide-inner">
+      <h2 class="fade-in-up">Guided selection flow</h2>
+      <p class="fade-in-up">A step-by-step wizard replaces the dump-all-packages approach. Parents are guided, not abandoned.</p>
+      <div class="flow-steps fade-in-up">
+        <div class="flow-step">
+          <div class="step-num">1</div>
+          <h4>What do you want?</h4>
+          <p>Digital, prints, wall art, or everything</p>
+          <span class="flow-arrow">&#8594;</span>
+        </div>
+        <div class="flow-step">
+          <div class="step-num">2</div>
+          <h4>Filtered results</h4>
+          <p>Visual comparisons of matching packages</p>
+          <span class="flow-arrow">&#8594;</span>
+        </div>
+        <div class="flow-step">
+          <div class="step-num">3</div>
+          <h4>Pick your photos</h4>
+          <p>Live preview in product template</p>
+          <span class="flow-arrow">&#8594;</span>
+        </div>
+        <div class="flow-step">
+          <div class="step-num">4</div>
+          <h4>Review & upsell</h4>
+          <p>"Add wallet prints for $15"</p>
+        </div>
+      </div>
+      <div class="card-grid cols-2 fade-in-up" style="margin-top:2rem;">
+        <div class="card solution-card" style="border-left:3px solid var(--green);">
+          <div class="pain-label" style="color:var(--green);">Result</div>
+          <p>Progress indicator throughout — parents always know where they are and what's next.</p>
+        </div>
+        <div class="card solution-card" style="border-left:3px solid var(--green);">
+          <div class="pain-label" style="color:var(--green);">Result</div>
+          <p>Contextual upsells increase AOV without feeling pushy — suggestions appear at decision points.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8: Photo Selection Experience -->
+  <div class="slide">
+    <div class="slide-inner">
+      <h2 class="fade-in-up">Photo selection experience</h2>
+      <p class="fade-in-up">The moment that matters most — choosing which photo goes in the product.</p>
+      <div class="card-grid cols-2 fade-in-up">
+        <div class="card">
+          <div class="card-icon">&#128247;</div>
+          <h3>Full-Screen Viewer</h3>
+          <p>Swipeable gallery with pinch-to-zoom. See every detail before committing.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">&#8596;</div>
+          <h3>Side-by-Side Compare</h3>
+          <p>Can't decide between two poses? View them together. Favorite before buying.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">&#128444;</div>
+          <h3>Live Product Preview</h3>
+          <p>See your selected photo IN the frame, on the canvas, in the collage — before you check out.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">&#9829;</div>
+          <h3>Favorite & Shortlist</h3>
+          <p>Heart your favorites first, then decide which goes where. No commitment pressure.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 9: Checkout Optimization -->
+  <div class="slide">
+    <div class="slide-inner">
+      <h2 class="fade-in-up">Checkout optimization</h2>
+      <p class="fade-in-up">Every extra step loses customers. One-page checkout with visual confirmation.</p>
+      <div class="card-grid cols-2 fade-in-up">
+        <div class="card">
+          <div class="card-icon">&#128179;</div>
+          <h3>One-Page Checkout</h3>
+          <p>No multi-step form. Order summary with visual thumbnails of selected products and photos.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">&#128274;</div>
+          <h3>Saved Payment Methods</h3>
+          <p>Returning parents check out in seconds. Reduce friction for families with multiple students.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">&#127873;</div>
+          <h3>Gift Purchasing</h3>
+          <p>Grandparents can buy for students directly. Gift wrapping options for print products.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">&#128101;</div>
+          <h3>Multi-Student Cart</h3>
+          <p>Multiple access codes in one cart. Families with siblings check out once, not three times.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 10: Communication & Lifecycle -->
+  <div class="slide">
+    <div class="slide-inner">
+      <h2 class="fade-in-up">Communication & lifecycle</h2>
+      <p class="fade-in-up">Smart archiving, proactive notifications, post-purchase engagement.</p>
+      <ul class="feature-list fade-in-up">
+        <li><span class="check">&#10003;</span> <strong>Smart archiving:</strong> "Last chance" urgency without showing expired countdowns that confuse parents</li>
+        <li><span class="check">&#10003;</span> <strong>SMS + email:</strong> Reach parents where they are — text messages have 98% open rate vs 20% for email</li>
+        <li><span class="check">&#10003;</span> <strong>Direct gallery links:</strong> One tap from notification to their photos — no access code re-entry</li>
+        <li><span class="check">&#10003;</span> <strong>Order tracking:</strong> Delivery estimates and status updates keep parents informed post-purchase</li>
+        <li><span class="check">&#10003;</span> <strong>Reorder prompts:</strong> "Picture day photos expire in 5 days" — clear, actionable, not panicky</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- SLIDE 11: Mobile-First Design (Pillar 2) -->
+  <div class="slide slide-divider">
+    <div class="slide-inner section-header">
+      <div class="section-icon fade-in-up">&#128241;</div>
+      <div class="pillar-num fade-in-up">Pillar 2 &mdash; Mobile App Experience</div>
+      <h2 class="fade-in-up">Mobile-First Design</h2>
+      <p class="lead fade-in-up">A PWA that feels native — installable, offline-capable, push notifications.</p>
+    </div>
+  </div>
+
+  <!-- SLIDE 12: Mobile Photo Browsing & Purchase -->
+  <div class="slide">
+    <div class="slide-inner">
+      <h2 class="fade-in-up">Mobile photo browsing</h2>
+      <div class="two-col fade-in-up">
+        <div>
+          <ul class="feature-list">
+            <li><span class="check">&#10003;</span> Full-screen swipeable gallery — like Instagram stories</li>
+            <li><span class="check">&#10003;</span> Pinch to zoom on any photo</li>
+            <li><span class="check">&#10003;</span> Quick-favorite with heart tap</li>
+            <li><span class="check">&#10003;</span> Share individual photos with family for input before purchasing</li>
+            <li><span class="check">&#10003;</span> QR code scan to instantly open gallery</li>
+          </ul>
+          <div style="margin-top:1.5rem;">
+            <h3 style="color:var(--text);">Mobile Purchase Flow</h3>
+            <ul class="feature-list">
+              <li><span class="check">&#10003;</span> Thumb-friendly package cards</li>
+              <li><span class="check">&#10003;</span> Apple Pay / Google Pay one-tap checkout</li>
+              <li><span class="check">&#10003;</span> One-tap reorder for returning customers</li>
+              <li><span class="check">&#10003;</span> Push notifications for deadlines and order updates</li>
+            </ul>
+          </div>
+        </div>
+        <div style="text-align:center;">
+          <div class="phone-frame">
+            <div class="phone-notch"></div>
+            <div class="phone-content" style="display:flex; flex-direction:column; justify-content:space-between;">
+              <div>
+                <div style="font-size:0.6rem; color:var(--text-muted); margin-bottom:0.4rem;">Allanah's Photos</div>
+                <div style="background:var(--surface-2); border-radius:8px; height:160px; display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:0.6rem; margin-bottom:0.4rem;">
+                  &#128247; Full-screen photo
+                </div>
+                <div style="display:flex; gap:0.3rem;">
+                  <div style="flex:1; background:var(--surface-2); border-radius:4px; height:36px; display:flex; align-items:center; justify-content:center; font-size:0.5rem; color:var(--text-muted);">Photo 2</div>
+                  <div style="flex:1; background:var(--surface-2); border-radius:4px; height:36px; display:flex; align-items:center; justify-content:center; font-size:0.5rem; color:var(--text-muted);">Photo 3</div>
+                  <div style="flex:1; background:var(--surface-2); border-radius:4px; height:36px; display:flex; align-items:center; justify-content:center; font-size:0.5rem; color:var(--text-muted);">Photo 4</div>
+                </div>
+              </div>
+              <div style="display:flex; gap:0.3rem;">
+                <div style="flex:1; background:var(--accent); border-radius:6px; padding:0.3rem; text-align:center; font-size:0.55rem; color:#fff; font-weight:600;">Add to Cart</div>
+                <div style="width:36px; background:var(--surface-2); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:0.7rem;">&#9829;</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 13: Family Sharing -->
+  <div class="slide">
+    <div class="slide-inner">
+      <h2 class="fade-in-up">Family sharing</h2>
+      <p class="fade-in-up">Photography purchases are family decisions. Make collaboration easy.</p>
+      <div class="card-grid cols-3 fade-in-up">
+        <div class="card">
+          <div class="card-icon">&#128106;</div>
+          <h3>Share Gallery Access</h3>
+          <p>Invite grandparents and family to browse the gallery. They see the same photos, same quality.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">&#128221;</div>
+          <h3>Collaborative Wish List</h3>
+          <p>Family members suggest packages they'd like to buy. Mom approves, grandma purchases.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">&#127873;</div>
+          <h3>Gift Purchasing</h3>
+          <p>"Buy this for Allanah" flow — grandparents purchase directly without needing the access code.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 14: Admin Improvements (Pillar 3) -->
+  <div class="slide slide-divider">
+    <div class="slide-inner section-header">
+      <div class="section-icon fade-in-up">&#9881;</div>
+      <div class="pillar-num fade-in-up">Pillar 3 &mdash; Admin Improvements</div>
+      <h2 class="fade-in-up">Live Storefront Preview</h2>
+      <p class="lead fade-in-up">What photographers configure is what parents see — verified in real-time.</p>
+    </div>
+  </div>
+
+  <!-- SLIDE 15: Admin Preview Detail -->
+  <div class="slide">
+    <div class="slide-inner">
+      <h2 class="fade-in-up">Side-by-side: admin & storefront</h2>
+      <p class="fade-in-up">Change a setting, see it reflected instantly. Preview as a specific subject.</p>
+      <div class="comparison fade-in-up">
+        <div class="comparison-side" style="background:var(--surface); border:1px solid var(--border);">
+          <div class="comp-label" style="color:var(--orange);">Admin Panel</div>
+          <div style="font-size:0.85rem; margin-bottom:0.75rem;">
+            <div style="color:var(--text-muted); font-size:0.75rem; margin-bottom:0.3rem;">Package Name</div>
+            <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:6px; padding:0.5rem 0.75rem; color:var(--text);">Digital Collection — All Photos</div>
+          </div>
+          <div style="font-size:0.85rem; margin-bottom:0.75rem;">
+            <div style="color:var(--text-muted); font-size:0.75rem; margin-bottom:0.3rem;">Category</div>
+            <div style="display:flex; gap:0.3rem;">
+              <span class="mock-tab active">Digital</span>
+              <span class="mock-tab">Prints</span>
+              <span class="mock-tab">Canvas</span>
+            </div>
+          </div>
+          <div style="font-size:0.85rem;">
+            <div style="color:var(--text-muted); font-size:0.75rem; margin-bottom:0.3rem;">Price</div>
+            <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:6px; padding:0.5rem 0.75rem; color:var(--text);">$199.00</div>
+          </div>
+        </div>
+        <div class="comparison-side" style="background:var(--surface); border:1px solid var(--border);">
+          <div class="comp-label" style="color:var(--green);">Live Preview</div>
+          <div style="background:var(--bg); border-radius:8px; padding:1rem;">
+            <div class="mock-tabs">
+              <div class="mock-tab active">Digital</div>
+              <div class="mock-tab">Prints</div>
+              <div class="mock-tab">Canvas</div>
+            </div>
+            <div class="mock-package" style="border-left:2px solid var(--accent);">
+              <span class="pkg-name" style="color:var(--text);">Digital Collection — All Photos</span>
+              <span class="pkg-price" style="color:var(--green);">$199</span>
+            </div>
+            <div style="font-size:0.7rem; color:var(--text-muted); padding:0.5rem 0; text-align:center; font-style:italic;">Preview as: Allanah Mendoza</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-grid cols-2 fade-in-up" style="margin-top:1.5rem;">
+        <div class="card">
+          <h3>Preview as Subject</h3>
+          <p>See exactly what a specific student/parent sees — with their photos, their packages.</p>
+        </div>
+        <div class="card">
+          <h3>Mobile Preview Toggle</h3>
+          <p>Switch between desktop and mobile views instantly to verify the experience on both.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 16: Smart Package Builder -->
+  <div class="slide">
+    <div class="slide-inner">
+      <h2 class="fade-in-up">Smart package builder</h2>
+      <p class="fade-in-up">Visual drag-and-drop package composition with data-driven pricing suggestions.</p>
+      <div class="card-grid cols-2 fade-in-up">
+        <div class="card">
+          <div class="card-icon">&#128736;</div>
+          <h3>Visual Drag-and-Drop</h3>
+          <p>Compose packages by dragging products — prints, digitals, canvas, frames — into a visual bundle. No more spreadsheet-style configuration.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">&#128218;</div>
+          <h3>Template Library</h3>
+          <p>Start from proven package structures. "Senior Standard", "Family Value", "Elementary Basic" — customize from there.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">&#128200;</div>
+          <h3>Price Optimization</h3>
+          <p>Suggestions based on market data: "Photographers in your region price this package 15% higher on average."</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">&#9878;</div>
+          <h3>A/B Testing</h3>
+          <p>Run two package sets simultaneously. Measure which converts better. Data-driven decisions, not guesses.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 17: Analytics Dashboard -->
+  <div class="slide">
+    <div class="slide-inner">
+      <h2 class="fade-in-up">Analytics dashboard</h2>
+      <p class="fade-in-up">Real-time visibility into what's working and what's not.</p>
+      <div class="card-grid cols-3 fade-in-up">
+        <div class="card">
+          <div class="card-icon">&#128202;</div>
+          <h3>Real-Time Sales</h3>
+          <p>Live dashboard — not a statistics page you check once a week. Revenue, orders, conversion rate updated in real-time.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">&#128230;</div>
+          <h3>Package Performance</h3>
+          <p>Which packages convert? Which get abandoned in cart? See the funnel for each product.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">&#127912;</div>
+          <h3>Photo Popularity</h3>
+          <p>Which poses are selected most? Helps photographers optimize their shooting style for future jobs.</p>
+        </div>
+      </div>
+      <div class="card-grid cols-2 fade-in-up" style="margin-top:1rem;">
+        <div class="card">
+          <div class="card-icon">&#128176;</div>
+          <h3>Revenue Forecasting</h3>
+          <p>Predict expected revenue based on job type, season, and historical data. Plan staffing and resources.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">&#128231;</div>
+          <h3>Campaign Intelligence</h3>
+          <p>AI-generated subject lines, optimal send times, A/B testing, SMS integration alongside email.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 18: Integration/API Layer (Pillar 4) -->
+  <div class="slide slide-divider">
+    <div class="slide-inner section-header">
+      <div class="section-icon fade-in-up">&#128268;</div>
+      <div class="pillar-num fade-in-up">Pillar 4 &mdash; Integration / API Layer</div>
+      <h2 class="fade-in-up">Modern API Architecture</h2>
+      <p class="lead fade-in-up">Open, extensible, real-time — the foundation for platform growth.</p>
+    </div>
+  </div>
+
+  <!-- SLIDE 19: API & Developer Platform -->
+  <div class="slide">
+    <div class="slide-inner">
+      <h2 class="fade-in-up">Developer platform</h2>
+      <p class="fade-in-up">Turn GotPhoto into a platform that photographers and developers can extend.</p>
+      <div class="card-grid cols-2 fade-in-up">
+        <div class="card">
+          <div class="card-icon">&#128640;</div>
+          <h3>RESTful + GraphQL API</h3>
+          <p>Flexible queries for any client. Real-time inventory and availability via WebSocket. CDN-optimized photo delivery.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">&#128268;</div>
+          <h3>Webhook Events</h3>
+          <p>Order placed, photo viewed, cart abandoned — trigger automations and integrations in real-time.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">&#129513;</div>
+          <h3>Embeddable Widgets</h3>
+          <p>Gallery viewer, package selector, checkout — embed directly on photographer websites. White-label ready.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">&#128273;</div>
+          <h3>OAuth Integration</h3>
+          <p>Third-party apps connect securely. CRM, accounting, school admin systems — all through standard OAuth.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 20: Data & Intelligence -->
+  <div class="slide">
+    <div class="slide-inner">
+      <h2 class="fade-in-up">Data & intelligence</h2>
+      <p class="fade-in-up">Aggregate insights that make every photographer more successful.</p>
+      <div class="card-grid cols-2 fade-in-up">
+        <div class="card">
+          <div class="card-icon">&#127758;</div>
+          <h3>Market Insights</h3>
+          <p>Aggregate data across all photographers — pricing trends, package popularity, seasonal patterns by region.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">&#128161;</div>
+          <h3>Pricing Recommendations</h3>
+          <p>"Based on your region and job type, photographers who price similar packages at $X see 23% higher conversion."</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">&#128302;</div>
+          <h3>Predictive Analytics</h3>
+          <p>Expected revenue per job type. Early warning for underperforming campaigns. Proactive, not reactive.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">&#127775;</div>
+          <h3>Photo Quality Scoring</h3>
+          <p>AI-assisted quality assessment helps photographers identify their strongest images for featured placement.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 21: Implementation Roadmap -->
+  <div class="slide">
+    <div class="slide-inner">
+      <span class="badge badge-accent fade-in-up">Roadmap</span>
+      <h2 class="fade-in-up">Implementation roadmap</h2>
+      <p class="fade-in-up">Phased delivery — each phase delivers standalone value while building toward the full vision.</p>
+      <div class="roadmap fade-in-up">
+        <div class="roadmap-phase">
+          <div class="phase-label phase-q1">Q1</div>
+          <div class="phase-content">
+            <h3>Storefront UX Overhaul</h3>
+            <p>Package discovery, guided selection wizard, visual previews, checkout optimization. Highest impact, fastest ROI.</p>
+          </div>
+        </div>
+        <div class="roadmap-phase">
+          <div class="phase-label phase-q2">Q2</div>
+          <div class="phase-content">
+            <h3>Mobile PWA</h3>
+            <p>Installable app, push notifications, Apple Pay / Google Pay, QR code gallery access, family sharing.</p>
+          </div>
+        </div>
+        <div class="roadmap-phase">
+          <div class="phase-label phase-q3">Q3</div>
+          <div class="phase-content">
+            <h3>Admin Dashboard</h3>
+            <p>Live storefront preview, visual package builder, real-time analytics, campaign intelligence tools.</p>
+          </div>
+        </div>
+        <div class="roadmap-phase">
+          <div class="phase-label phase-q4">Q4</div>
+          <div class="phase-content">
+            <h3>API Platform</h3>
+            <p>REST + GraphQL APIs, webhook events, embeddable widgets, developer portal, data intelligence layer.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 22: Partnership Model -->
+  <div class="slide">
+    <div class="slide-inner">
+      <span class="badge badge-green fade-in-up">Partnership</span>
+      <h2 class="fade-in-up">Why ShalaWorks</h2>
+      <div class="card-grid cols-2 fade-in-up">
+        <div class="card">
+          <div class="card-icon">&#127912;</div>
+          <h3>UX Design & Frontend Engineering</h3>
+          <p>Production-grade interfaces built for conversion. Mobile-first, accessibility-first, performance-first.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">&#128241;</div>
+          <h3>Mobile Development</h3>
+          <p>PWA and native app expertise. iOS and Android. Push notifications, offline support, native payment integration.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">&#128269;</div>
+          <h3>Deep Domain Knowledge</h3>
+          <p>Direct experience with GotPhoto through ChoicePix — a real photographer using the platform daily. We know the pain points first-hand.</p>
+        </div>
+        <div class="card">
+          <div class="card-icon">&#9889;</div>
+          <h3>Sprint-Based Delivery</h3>
+          <p>Embedded team model. Two-week sprints, weekly demos, continuous delivery. Ship fast, iterate faster.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 23: Next Steps -->
+  <div class="slide">
+    <div class="slide-inner" style="text-align:center;">
+      <h2 class="fade-in-up" style="font-size:2.8rem;">Next steps</h2>
+      <div class="flow-steps fade-in-up" style="max-width:800px; margin:2rem auto;">
+        <div class="flow-step">
+          <div class="step-num">1</div>
+          <h4>Discovery Workshop</h4>
+          <p>With GotPhoto product team</p>
+          <span class="flow-arrow">&#8594;</span>
+        </div>
+        <div class="flow-step">
+          <div class="step-num">2</div>
+          <h4>Prototype Sprint</h4>
+          <p>2-week storefront UX proof of concept</p>
+          <span class="flow-arrow">&#8594;</span>
+        </div>
+        <div class="flow-step">
+          <div class="step-num">3</div>
+          <h4>Build Together</h4>
+          <p>Sprint-based partnership</p>
+        </div>
+      </div>
+      <div class="fade-in-up" style="margin-top:3rem;">
+        <div class="logos" style="justify-content:center; margin-bottom:1rem;">
+          <span>ShalaWorks</span>
+          <span class="divider">&times;</span>
+          <span>GotPhoto</span>
+        </div>
+        <p class="tagline" style="font-size:1.1rem;">"Let's reimagine photography commerce together."</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Navigation Bar -->
+<nav class="nav-bar">
+  <button class="nav-btn nav-prev" disabled>&larr; Prev</button>
+  <div class="nav-progress">
+    <div class="nav-progress-fill" style="width:0%"></div>
+  </div>
+  <span class="nav-counter">1 / 23</span>
+  <button class="nav-btn nav-next">Next &rarr;</button>
+</nav>
+
+<script src="slides.js"></script>
+</body>
+</html>
