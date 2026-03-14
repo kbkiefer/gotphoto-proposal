@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GotPhoto App System Proposal — ShalaWorks</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+      background: #0a0a0f;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+    .logo { font-size: 14px; letter-spacing: 0.15em; text-transform: uppercase; color: #888; margin-bottom: 12px; }
+    h1 { font-size: 36px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; text-align: center; }
+    .subtitle { font-size: 16px; color: #888; margin-bottom: 48px; text-align: center; }
+    .cards { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; max-width: 900px; }
+    .card {
+      background: #16161f;
+      border: 1px solid #2a2a3a;
+      border-radius: 16px;
+      padding: 32px;
+      width: 260px;
+      text-decoration: none;
+      color: #fff;
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card:hover { transform: translateY(-4px); border-color: #e85d04; box-shadow: 0 8px 32px rgba(232,93,4,0.15); }
+    .card-icon { font-size: 32px; margin-bottom: 16px; display: block; }
+    .card h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .card p { font-size: 14px; color: #888; line-height: 1.5; }
+    .card .tag { display: inline-block; margin-top: 16px; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: #e85d04; background: rgba(232,93,4,0.1); padding: 4px 10px; border-radius: 100px; }
+    .footer { margin-top: 60px; font-size: 13px; color: #555; text-align: center; }
+    .footer a { color: #888; text-decoration: none; }
+    .footer a:hover { color: #e85d04; }
+  </style>
+</head>
+<body>
+  <div class="logo">ShalaWorks</div>
+  <h1>GotPhoto App System Proposal</h1>
+  <p class="subtitle">Reimagining the photography commerce experience</p>
+
+  <div class="cards">
+    <a class="card" href="app/">
+      <span class="card-icon">📱</span>
+      <h2>Client App</h2>
+      <p>The parent/student storefront — browse photos, select packages, customize products, and checkout.</p>
+      <span class="tag">Mobile-first PWA</span>
+    </a>
+
+    <a class="card" href="admin/">
+      <span class="card-icon">⚙️</span>
+      <h2>Admin Dashboard</h2>
+      <p>The photographer's control panel — manage jobs, pricing, campaigns, and preview the live storefront.</p>
+      <span class="tag">Photographer tools</span>
+    </a>
+
+    <a class="card" href="presentation/">
+      <span class="card-icon">📊</span>
+      <h2>Presentation</h2>
+      <p>The full partnership proposal — system analysis, architecture, roadmap, and implementation plan.</p>
+      <span class="tag">Slide deck</span>
+    </a>
+  </div>
+
+  <div class="footer">
+    <p>Built by <a href="https://shalaworks.com">ShalaWorks</a> for <a href="https://gotphoto.com">GotPhoto</a></p>
+  </div>
+</body>
+</html>
