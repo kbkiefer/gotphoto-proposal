@@ -1983,8 +1983,8 @@ body {
   flex-direction: column;
   gap: 10px;
   flex: 1;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  min-height: 0;
+  overflow: hidden;
   padding-bottom: 12px;
 }
 
@@ -2223,12 +2223,14 @@ body {
 /* ---- Large Preview ---- */
 .sel-preview {
   width: 100%;
-  max-width: 240px;
-  margin: 0 auto 12px;
+  max-width: 200px;
+  margin: 0 auto 6px;
   border-radius: var(--radius);
   overflow: hidden;
   box-shadow: var(--shadow-lg);
   background: var(--surface);
+  flex-shrink: 1;
+  min-height: 0;
 }
 
 .sel-preview-img {
@@ -2242,6 +2244,7 @@ body {
   aspect-ratio: 3 / 4;
   object-fit: cover;
   display: block;
+  max-height: 30vh;
 }
 
 /* Crop mode: full image visible, user zooms/pans to set crop area */
@@ -2264,8 +2267,8 @@ body {
 }
 
 .sel-preview-label {
-  padding: 10px 14px;
-  font-size: 13px;
+  padding: 6px 14px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text-muted);
   text-align: center;
@@ -2312,6 +2315,7 @@ body {
   display: flex;
   border-bottom: 2px solid var(--surface);
   margin-bottom: 6px;
+  flex-shrink: 0;
 }
 
 .sel-tab {
@@ -2367,6 +2371,7 @@ body {
 /* ---- Pose Strip (horizontal scroll) ---- */
 .sel-poses-section {
   padding-bottom: 8px;
+  flex-shrink: 0;
 }
 
 .sel-poses-title {
