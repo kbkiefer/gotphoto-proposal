@@ -759,7 +759,7 @@ function buildSelectionScreen() {
     tabContentHtml = `
       <div class="sel-poses-section">
         <div class="sel-poses-title">${sectionTitle}</div>
-        <div class="sel-pose-grid">${showPhotos.map(buildPhotoCell).join('')}</div>
+        <div class="sel-pose-strip">${showPhotos.map(buildPhotoCell).join('')}</div>
       </div>
     `;
   } else if (selectionTab === 'crop') {

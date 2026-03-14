@@ -1982,6 +1982,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding-bottom: 12px;
@@ -2140,9 +2141,6 @@ body {
   flex-direction: column;
 }
 
-[data-screen="selection"] .selection-footer {
-  margin-top: auto;
-}
 
 /* Footer nav */
 .selection-footer {
@@ -2372,32 +2370,38 @@ body {
 }
 
 .sel-poses-title {
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 600;
   color: var(--text-muted);
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
-.sel-pose-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 4px;
+.sel-pose-strip {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 4px;
 }
 
-.sel-pose-grid .pose-cell-v2 {
-  width: 100% !important;
+.sel-pose-strip::-webkit-scrollbar { display: none; }
+
+.sel-pose-strip .pose-cell-v2 {
+  flex-shrink: 0;
+  width: 56px !important;
 }
 
-.sel-pose-grid .pose-cell-v2 .pose-cell-img {
-  width: 100% !important;
-  height: auto !important;
-  aspect-ratio: 1 / 1 !important;
-  border-radius: 5px;
+.sel-pose-strip .pose-cell-v2 .pose-cell-img {
+  width: 56px !important;
+  height: 72px !important;
+  aspect-ratio: auto !important;
+  border-radius: 6px;
   overflow: hidden;
   border-width: 2px;
 }
 
-.sel-pose-grid .pose-cell-v2 .pose-cell-img img {
+.sel-pose-strip .pose-cell-v2 .pose-cell-img img {
   width: 100% !important;
   height: 100% !important;
   object-fit: cover !important;
@@ -2405,21 +2409,21 @@ body {
   display: block !important;
 }
 
-.sel-pose-grid .pose-cell-label {
+.sel-pose-strip .pose-cell-label {
   font-size: 8px;
-  margin-top: 1px;
+  margin-top: 2px;
 }
 
-.sel-pose-grid .pose-check {
-  width: 16px;
-  height: 16px;
+.sel-pose-strip .pose-check {
+  width: 14px;
+  height: 14px;
   top: 2px;
   right: 2px;
 }
 
-.sel-pose-grid .pose-check svg {
-  width: 9px;
-  height: 9px;
+.sel-pose-strip .pose-check svg {
+  width: 8px;
+  height: 8px;
 }
 
 /* ---- Crop Section ---- */
