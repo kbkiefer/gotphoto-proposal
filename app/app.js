@@ -1998,7 +1998,24 @@ function bindEvents() {
     let pinching = false, startDist = 0;
     const clamp = (v, min, max) => Math.min(Math.max(v, min), max);
 
+    // Calculate max pan based on how much the scaled image overflows the container
+    const getMaxPan = () => {
+      const rect = cropPreview.getBoundingClientRect();
+      // At scale 1 with object-fit:cover, image fills container exactly
+      // Panning is only allowed for the overflow from zooming
+      const overflowX = rect.width * (scale - 1) / 2;
+      const overflowY = rect.height * (scale - 1) / 2;
+      return { maxX: overflowX, maxY: overflowY };
+    };
+
+    const clampPan = () => {
+      const { maxX, maxY } = getMaxPan();
+      tx = clamp(tx, -maxX, maxX);
+      ty = clamp(ty, -maxY, maxY);
+    };
+
     const applyTransform = () => {
+      clampPan();
       if (img) img.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
     };
 
@@ -2015,9 +2032,8 @@ function bindEvents() {
     const onStart = (x, y) => { dragging = true; startX = x; startY = y; if (img) img.style.transition = 'none'; };
     const onMove = (x, y) => {
       if (!dragging || pinching) return;
-      const maxPan = 40 + (scale - 1) * 60;
-      tx = clamp(lastTx + (x - startX), -maxPan, maxPan);
-      ty = clamp(lastTy + (y - startY), -maxPan * 1.25, maxPan * 1.25);
+      tx = lastTx + (x - startX);
+      ty = lastTy + (y - startY);
       applyTransform();
     };
     const onEnd = () => {
@@ -2039,6 +2055,7 @@ function bindEvents() {
       scale = clamp(scale + delta, 1, 3);
       lastScale = scale;
       applyTransform();
+      lastTx = tx; lastTy = ty;
       saveOffset();
     }, { passive: false });
 
@@ -2064,6 +2081,7 @@ function bindEvents() {
         const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
         scale = clamp(lastScale * (dist / startDist), 1, 3);
         applyTransform();
+        lastTx = tx; lastTy = ty;
       } else if (e.touches.length === 1 && !pinching) {
         const t = e.touches[0];
         onMove(t.clientX, t.clientY);
