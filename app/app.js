@@ -728,6 +728,7 @@ function buildSelectionScreen() {
         <div class="sel-preview-placeholder">
           <div class="sel-preview-icon">${icons.gallery}</div>
           <span>Select a pose below</span>
+          ${activeSlot ? `<div class="sel-preview-slot-label">${activeSlot.label}</div>` : ''}
         </div>
       </div>`;
 
@@ -778,9 +779,9 @@ function buildSelectionScreen() {
 
   // Filled slots mini-strip
   const miniItems = slots.map((s, i) => {
-    if (!s.photoId) return `<div class="mini-slot mini-slot-empty" data-action="jump-slot" data-slot-index="${i}"><span>${i + 1}</span></div>`;
-    const photo = photos.find(p => p.id === s.photoId);
     const isCurrent = i === state.activeSlotIndex;
+    if (!s.photoId) return `<div class="mini-slot mini-slot-empty ${isCurrent ? 'mini-slot-current' : ''}" data-action="jump-slot" data-slot-index="${i}"><span>${i + 1}</span></div>`;
+    const photo = photos.find(p => p.id === s.photoId);
     return `
       <div class="mini-slot ${isCurrent ? 'mini-slot-current' : ''}" data-action="jump-slot" data-slot-index="${i}">
         <img src="${getPhotoThumb(photo.file)}" alt="${photo.label}">
@@ -1982,8 +1983,9 @@ function bindEvents() {
   document.querySelector('[data-action="crop-reset"]')?.addEventListener('click', () => {
     const img = document.getElementById('selPreviewImg');
     if (img) { img.style.transition = 'transform 0.3s ease'; img.style.transform = 'translate(0,0) scale(1)'; }
-    // Reset stored offset
+    // Reset stored offset and re-render to update UI
     state.cropOffsets[state.activeSlotIndex] = { tx: 0, ty: 0, scale: 1, confirmed: false };
+    render();
   });
 
   // Crop drag + pinch-to-zoom interaction
@@ -2125,6 +2127,7 @@ function bindEvents() {
   document.querySelectorAll('[data-action="jump-slot"]').forEach(btn => {
     btn.addEventListener('click', () => {
       state.activeSlotIndex = parseInt(btn.dataset.slotIndex);
+      state.selectionTab = 'pose';
       state.showReview = false;
       render();
     });
