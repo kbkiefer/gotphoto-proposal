@@ -2387,8 +2387,10 @@ body {
 
 .sel-pose-strip {
   display: flex;
+  flex-wrap: nowrap;
   gap: 8px;
   overflow-x: auto;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   padding-bottom: 4px;
@@ -2398,12 +2400,13 @@ body {
 
 .sel-pose-strip .pose-cell-v2 {
   flex-shrink: 0;
-  width: 72px !important;
+  width: 64px !important;
+  min-width: 64px !important;
 }
 
 .sel-pose-strip .pose-cell-v2 .pose-cell-img {
-  width: 72px !important;
-  height: 96px !important;
+  width: 64px !important;
+  height: 84px !important;
   aspect-ratio: auto !important;
   border-radius: 8px;
   overflow: hidden;
