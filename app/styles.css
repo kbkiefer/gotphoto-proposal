@@ -1650,6 +1650,45 @@ body {
   font-weight: 700;
 }
 
+/* ---- Package Draft Badge ---- */
+.package-draft-badge {
+  margin-top: 6px;
+  padding: 8px 10px;
+  background: var(--accent-bg);
+  border: 1.5px solid var(--accent);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.draft-badge-progress {
+  height: 4px;
+  background: rgba(0,0,0,0.06);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.draft-badge-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 100px;
+  transition: width 0.3s ease;
+}
+
+.draft-badge-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.draft-badge-continue {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  align-self: flex-end;
+}
+
 .include-more {
   font-size: 11px;
   color: var(--accent);

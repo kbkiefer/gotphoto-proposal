@@ -462,6 +462,13 @@ function buildPackagesScreen() {
     const photoSeed = cardPhotoSeeds[idx] || photos[0]?.file;
     const catLabel = categoryLabels[pkg.category] || pkg.category;
 
+    // Check for saved draft
+    const drafts = JSON.parse(localStorage.getItem('choicepix-drafts') || '{}');
+    const draft = drafts[pkg.id];
+    const hasDraft = draft && draft.slots.some(s => s.photoId);
+    const draftCount = hasDraft ? draft.slots.filter(s => s.photoId).length : 0;
+    const draftTotal = hasDraft ? draft.slots.length : 0;
+
     return `
       <div class="package-card package-card-split" data-pkg-id="${pkg.id}" data-cat="${pkg.category}" data-price="${pkg.price}">
         <div class="package-photo-col">
@@ -476,10 +483,20 @@ function buildPackagesScreen() {
           <div class="package-price-row">
             ${pkg.isCustom ? '<span class="package-price-custom">Custom Pricing</span>' : `<span class="package-price-amount">$${pkg.price}</span>`}
           </div>
-          <div class="package-includes-compact">
-            ${pkg.includes.slice(0, 3).map(item => `<div class="include-line">${item}</div>`).join('')}
-            ${pkg.includes.length > 3 ? `<div class="include-more">+${pkg.includes.length - 3} more</div>` : ''}
-          </div>
+          ${hasDraft ? `
+            <div class="package-draft-badge">
+              <div class="draft-badge-progress">
+                <div class="draft-badge-fill" style="width: ${(draftCount / draftTotal) * 100}%"></div>
+              </div>
+              <span class="draft-badge-text">Draft — ${draftCount}/${draftTotal} photos</span>
+              <span class="draft-badge-continue">Continue →</span>
+            </div>
+          ` : `
+            <div class="package-includes-compact">
+              ${pkg.includes.slice(0, 3).map(item => `<div class="include-line">${item}</div>`).join('')}
+              ${pkg.includes.length > 3 ? `<div class="include-more">+${pkg.includes.length - 3} more</div>` : ''}
+            </div>
+          `}
         </div>
       </div>
     `;
