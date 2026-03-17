@@ -2157,6 +2157,100 @@ body {
   z-index: 10;
 }
 
+/* ---- Selection Footer Actions ---- */
+.selection-footer-actions {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.selection-footer-actions .btn-continue {
+  flex: 1;
+}
+
+.btn-save-draft {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 14px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1.5px solid #e5e7eb;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+}
+
+.btn-save-draft svg {
+  width: 14px;
+  height: 14px;
+  stroke: var(--text-muted);
+  stroke-width: 2;
+  fill: none;
+  flex-shrink: 0;
+}
+
+.btn-save-draft:active {
+  transform: scale(0.95);
+  background: #e5e7eb;
+}
+
+/* ---- Draft Banner ---- */
+.draft-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: var(--accent-bg);
+  border-bottom: 1px solid var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.draft-discard {
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--bg);
+  border: 1px solid #e5e7eb;
+  border-radius: 100px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* ---- Toast ---- */
+.toast-msg {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #1f2937;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+}
+
+.toast-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 .btn-slot-nav {
   display: inline-flex;
   align-items: center;
@@ -2700,15 +2794,19 @@ body {
 .mini-strip::-webkit-scrollbar { display: none; }
 
 .mini-slot {
-  width: 28px;
-  height: 36px;
+  width: 36px;
+  height: 46px;
   flex-shrink: 0;
-  border-radius: 4px;
+  border-radius: 6px;
   overflow: hidden;
   border: 2px solid transparent;
   cursor: pointer;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.2s ease, transform 0.15s ease;
   -webkit-tap-highlight-color: transparent;
+}
+
+.mini-slot:active {
+  transform: scale(0.9);
 }
 
 .mini-slot img {

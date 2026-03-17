@@ -145,6 +145,21 @@ function buildBrandBar() {
   return el;
 }
 
+// Toast notification
+function showToast(message) {
+  const existing = document.querySelector('.toast-msg');
+  if (existing) existing.remove();
+  const toast = document.createElement('div');
+  toast.className = 'toast-msg';
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add('toast-visible'));
+  setTimeout(() => {
+    toast.classList.remove('toast-visible');
+    setTimeout(() => toast.remove(), 300);
+  }, 2500);
+}
+
 function render() {
   app.innerHTML = '';
   app.appendChild(buildBrandBar());
@@ -801,6 +816,13 @@ function buildSelectionScreen() {
         </div>
       </div>
 
+      ${state.hasDraftLoaded ? `
+        <div class="draft-banner">
+          <span>Draft restored — ${filledCount} of ${totalSlots} photos selected</span>
+          <button class="draft-discard" data-action="discard-draft" data-package-id="${pkg?.id}">Start Over</button>
+        </div>
+      ` : ''}
+
       <div class="selection-progress-bar">
         <div class="selection-progress-fill" style="width: ${totalSlots > 0 ? (filledCount / totalSlots * 100) : 0}%"></div>
       </div>
@@ -813,19 +835,26 @@ function buildSelectionScreen() {
 
       <div class="selection-footer">
         ${miniStripHtml}
-        ${allFilled ? `
-          <button class="btn-continue btn-continue-pulse" data-action="show-review">
-            Review & Add to Cart
-          </button>
-        ` : activePhoto ? `
-          <button class="btn-continue" data-action="next-slot">
-            ${icons.check} Confirm & Next Photo
-          </button>
-        ` : `
-          <button class="btn-continue" disabled>
-            Select a Pose
-          </button>
-        `}
+        <div class="selection-footer-actions">
+          ${filledCount > 0 ? `
+            <button class="btn-save-draft" data-action="save-draft">
+              ${icons.save || '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>'} Save Draft
+            </button>
+          ` : ''}
+          ${allFilled ? `
+            <button class="btn-continue btn-continue-pulse" data-action="show-review">
+              Review & Add to Cart
+            </button>
+          ` : activePhoto ? `
+            <button class="btn-continue" data-action="next-slot">
+              ${icons.check} Confirm & Next Photo
+            </button>
+          ` : `
+            <button class="btn-continue" disabled>
+              Select a Pose
+            </button>
+          `}
+        </div>
       </div>
     </div>
   `;
@@ -1195,11 +1224,25 @@ function navigate(screen, params = {}) {
     state.selectingPackage = params.package;
     state.selectedPhotos.clear();
     state.activeTemplateIndex = 0;
-    state.selectionSlots = buildSlotsForPackage(params.package);
-    state.activeSlotIndex = 0;
     state.showReview = false;
     state.selectionTab = 'pose';
     state.cropOffsets = {};
+
+    // Check for saved draft
+    const drafts = JSON.parse(localStorage.getItem('choicepix-drafts') || '{}');
+    const draft = drafts[params.package.id];
+    if (draft && draft.slots.some(s => s.photoId)) {
+      // Restore draft
+      state.selectionSlots = draft.slots;
+      state.activeSlotIndex = draft.activeSlotIndex || 0;
+      state.cropOffsets = draft.cropOffsets || {};
+      draft.slots.forEach(s => { if (s.photoId) state.selectedPhotos.add(s.photoId); });
+      state.hasDraftLoaded = true;
+    } else {
+      state.selectionSlots = buildSlotsForPackage(params.package);
+      state.activeSlotIndex = 0;
+      state.hasDraftLoaded = false;
+    }
   }
 
   if (params.jobIndex !== undefined) {
@@ -1962,6 +2005,62 @@ function bindEvents() {
     render();
   });
 
+  // Save draft — persist incomplete package selection to localStorage
+  document.querySelector('[data-action="save-draft"]')?.addEventListener('click', () => {
+    const draft = {
+      packageId: state.selectingPackage?.id || null,
+      packageName: state.selectingPackage?.name || '',
+      slots: state.selectionSlots.map(s => ({ label: s.label, photoId: s.photoId, templateId: s.templateId })),
+      activeSlotIndex: state.activeSlotIndex,
+      cropOffsets: { ...state.cropOffsets },
+      savedAt: new Date().toISOString(),
+      jobIndex: state.activeJobIndex,
+    };
+    // Store drafts keyed by package id
+    const drafts = JSON.parse(localStorage.getItem('choicepix-drafts') || '{}');
+    drafts[draft.packageId] = draft;
+    localStorage.setItem('choicepix-drafts', JSON.stringify(drafts));
+    // Show confirmation toast
+    showToast('Draft saved! You can continue later.');
+  });
+
+  // Resume draft
+  document.querySelector('[data-action="resume-draft"]')?.addEventListener('click', () => {
+    const btn = document.querySelector('[data-action="resume-draft"]');
+    const pkgId = btn?.dataset.packageId;
+    const drafts = JSON.parse(localStorage.getItem('choicepix-drafts') || '{}');
+    const draft = drafts[pkgId];
+    if (draft && state.selectingPackage) {
+      state.selectionSlots = draft.slots;
+      state.activeSlotIndex = draft.activeSlotIndex;
+      state.cropOffsets = draft.cropOffsets || {};
+      state.selectionTab = 'pose';
+      state.showReview = false;
+      // Re-populate selectedPhotos set
+      state.selectedPhotos.clear();
+      draft.slots.forEach(s => { if (s.photoId) state.selectedPhotos.add(s.photoId); });
+      render();
+    }
+  });
+
+  // Discard draft — start fresh
+  document.querySelector('[data-action="discard-draft"]')?.addEventListener('click', () => {
+    const btn = document.querySelector('[data-action="discard-draft"]');
+    const pkgId = btn?.dataset.packageId;
+    const drafts = JSON.parse(localStorage.getItem('choicepix-drafts') || '{}');
+    delete drafts[pkgId];
+    localStorage.setItem('choicepix-drafts', JSON.stringify(drafts));
+    // Reset to fresh slots
+    if (state.selectingPackage) {
+      state.selectionSlots = buildSlotsForPackage(state.selectingPackage);
+      state.activeSlotIndex = 0;
+      state.selectedPhotos.clear();
+      state.cropOffsets = {};
+      state.hasDraftLoaded = false;
+    }
+    render();
+  });
+
   // Crop confirm
   document.querySelector('[data-action="crop-confirm"]')?.addEventListener('click', () => {
     const offset = state.cropOffsets[state.activeSlotIndex];
@@ -2142,11 +2241,16 @@ function bindEvents() {
   document.querySelector('[data-action="add-to-cart"]')?.addEventListener('click', () => {
     if (state.selectingPackage && state.selectionSlots.some(s => s.photoId)) {
       const photos = state.selectionSlots.filter(s => s.photoId).map(s => s.photoId);
+      // Clear draft since package is complete
+      const drafts = JSON.parse(localStorage.getItem('choicepix-drafts') || '{}');
+      delete drafts[state.selectingPackage.id];
+      localStorage.setItem('choicepix-drafts', JSON.stringify(drafts));
       addToCart(state.selectingPackage, photos);
       state.selectedPhotos.clear();
       state.selectionSlots = [];
       state.selectingPackage = null;
       state.showReview = false;
+      state.hasDraftLoaded = false;
       navigate('cart');
     }
   });
