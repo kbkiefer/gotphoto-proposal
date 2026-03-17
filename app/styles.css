@@ -2383,16 +2383,21 @@ body {
   display: block;
 }
 
-/* Crop mode: larger preview for precision, user zooms/pans to set crop area */
+/* Crop mode: fixed aspect container, image fills it exactly */
 .sel-preview:has(.sel-preview-crop) {
-  max-width: 300px;
+  max-width: 280px;
+  flex: none;
 }
 .sel-preview-img.sel-preview-crop {
   cursor: grab;
   touch-action: none;
-  background: #111;
+  background: var(--surface);
+  height: auto;
+  aspect-ratio: 3 / 4;
 }
 .sel-preview-img.sel-preview-crop img {
+  width: 100%;
+  height: 100%;
   aspect-ratio: auto;
   object-fit: cover;
   transform-origin: center center;
