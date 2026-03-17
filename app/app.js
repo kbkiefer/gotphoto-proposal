@@ -1998,18 +1998,18 @@ function bindEvents() {
     let pinching = false, startDist = 0;
     const clamp = (v, min, max) => Math.min(Math.max(v, min), max);
 
-    // Calculate max pan based on how much the scaled image overflows the container
-    const getMaxPan = () => {
-      const rect = cropPreview.getBoundingClientRect();
-      // At scale 1 with object-fit:cover, image fills container exactly
-      // Panning is only allowed for the overflow from zooming
-      const overflowX = rect.width * (scale - 1) / 2;
-      const overflowY = rect.height * (scale - 1) / 2;
-      return { maxX: overflowX, maxY: overflowY };
-    };
-
+    // Clamp pan so the photo never reveals background behind it
     const clampPan = () => {
-      const { maxX, maxY } = getMaxPan();
+      if (scale <= 1) {
+        // No zoom = no pan allowed at all
+        tx = 0;
+        ty = 0;
+        return;
+      }
+      // Scaled image overflows container by this much on each side
+      const rect = cropPreview.getBoundingClientRect();
+      const maxX = Math.max(0, rect.width * (scale - 1) / 2);
+      const maxY = Math.max(0, rect.height * (scale - 1) / 2);
       tx = clamp(tx, -maxX, maxX);
       ty = clamp(ty, -maxY, maxY);
     };
@@ -2038,6 +2038,10 @@ function bindEvents() {
     };
     const onEnd = () => {
       dragging = false;
+      // Snap back within bounds with animation
+      if (img) img.style.transition = 'transform 0.2s ease';
+      clampPan();
+      if (img) img.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
       lastTx = tx; lastTy = ty;
       saveOffset();
     };
