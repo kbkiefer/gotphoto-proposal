@@ -2261,7 +2261,7 @@ body {
 }
 .sel-preview-img.sel-preview-crop img {
   aspect-ratio: auto;
-  object-fit: contain;
+  object-fit: cover;
   transform-origin: center center;
 }
 
@@ -2458,13 +2458,13 @@ body {
 
 .sel-crop-frame {
   position: absolute;
-  top: 10%;
-  left: 10%;
-  width: 80%;
-  height: 80%;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   border: 2px solid rgba(255,255,255,0.8);
   border-radius: 2px;
-  box-shadow: 0 0 0 9999px rgba(0,0,0,0.45);
+  box-shadow: none;
 }
 
 /* Rule-of-thirds grid lines */
