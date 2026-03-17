@@ -104,7 +104,7 @@ html, body {
    TYPOGRAPHY
    ====================================== */
 h1, h2 {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Outfit', sans-serif;
 }
 
 h1 {
@@ -126,7 +126,7 @@ h2 {
 }
 
 h4 {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 1.05rem;
   font-weight: 600;
   margin-bottom: 0.4em;
@@ -164,7 +164,7 @@ h4 {
    ====================================== */
 .label {
   display: inline-block;
-  font-family: 'Syne', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -189,7 +189,7 @@ h4 {
 }
 
 .brand-name {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 0.9rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -238,7 +238,7 @@ h4 {
 }
 
 .stat-number {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 3rem;
   font-weight: 800;
   background: var(--gradient);
@@ -282,7 +282,7 @@ h4 {
 }
 
 .eco-label {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-weight: 700;
   font-size: 1rem;
   color: var(--text);
@@ -424,7 +424,7 @@ h4 {
 .flow-card:last-child { border-radius: 0 12px 12px 0; }
 
 .flow-num {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 1.4rem;
   font-weight: 800;
   color: var(--accent);
@@ -515,7 +515,7 @@ h4 {
 }
 
 .draft-title {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-weight: 600;
   font-size: 0.9rem;
   margin-bottom: 0.6rem;
@@ -618,7 +618,7 @@ h4 {
 }
 
 .notif-title {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-weight: 600;
   font-size: 0.8rem;
   color: var(--accent);
@@ -653,7 +653,7 @@ h4 {
 }
 
 .dash-greeting {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 1.1rem;
   font-weight: 700;
   margin-bottom: 0.2rem;
@@ -690,7 +690,7 @@ h4 {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Syne', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-weight: 700;
   font-size: 0.9rem;
   flex-shrink: 0;
@@ -786,7 +786,7 @@ h4 {
 }
 
 .promo-icon {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 1.8rem;
   font-weight: 800;
   color: var(--accent);
@@ -851,7 +851,7 @@ h4 {
 }
 
 .timeline-label {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-weight: 700;
   font-size: 0.95rem;
   margin-bottom: 0.3rem;
@@ -992,7 +992,7 @@ h4 {
 }
 
 .why-number {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 2rem;
   font-weight: 800;
   background: var(--gradient);
@@ -1046,7 +1046,7 @@ h4 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Syne', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 0.9rem;
   font-weight: 700;
   margin-bottom: 0.75rem;
@@ -1073,7 +1073,7 @@ h4 {
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  font-family: 'Syne', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 1.1rem;
   font-weight: 600;
   color: var(--text-muted);
