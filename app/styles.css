@@ -1981,10 +1981,12 @@ body {
   padding: 12px 16px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
   padding-bottom: 12px;
 }
 
@@ -2135,10 +2137,11 @@ body {
   border: 1.5px solid white;
 }
 
-/* Selection screen: normal scroll, footer sticks to bottom */
+/* Selection screen: flex layout, footer sticks to bottom */
 [data-screen="selection"] {
   display: flex;
   flex-direction: column;
+  overflow: hidden !important;
 }
 
 
@@ -2223,33 +2226,40 @@ body {
 /* ---- Large Preview ---- */
 .sel-preview {
   width: 100%;
-  max-width: 200px;
-  margin: 0 auto 6px;
+  max-width: 160px;
+  max-height: 25vh;
+  margin: 0 auto 4px;
   border-radius: var(--radius);
   overflow: hidden;
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-md);
   background: var(--surface);
-  flex-shrink: 1;
-  min-height: 0;
+  flex-shrink: 0;
 }
 
 .sel-preview-img {
   position: relative;
   width: 100%;
+  max-height: calc(25vh - 28px);
   overflow: hidden;
 }
 
 .sel-preview-img img {
   width: 100%;
-  aspect-ratio: 3 / 4;
+  max-height: calc(25vh - 28px);
   object-fit: cover;
   display: block;
-  max-height: 30vh;
 }
 
-/* Crop mode: full image visible, user zooms/pans to set crop area */
+/* Crop mode: larger preview for precision, user zooms/pans to set crop area */
 .sel-preview:has(.sel-preview-crop) {
-  max-width: 320px;
+  max-width: 280px;
+  max-height: 45vh;
+}
+.sel-preview:has(.sel-preview-crop) .sel-preview-img {
+  max-height: calc(45vh - 28px);
+}
+.sel-preview:has(.sel-preview-crop) .sel-preview-img img {
+  max-height: calc(45vh - 28px);
 }
 .sel-preview-img.sel-preview-crop {
   cursor: grab;
@@ -2267,19 +2277,20 @@ body {
 }
 
 .sel-preview-label {
-  padding: 6px 14px;
-  font-size: 12px;
+  padding: 4px 10px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--text-muted);
   text-align: center;
   background: var(--bg);
   border-top: 1px solid var(--surface);
+  line-height: 1.2;
 }
 
 .sel-preview-empty {
-  max-width: 200px;
+  max-width: 160px;
   margin: 0 auto 4px;
-  height: 50px;
+  height: 44px;
   border-radius: var(--radius);
   border: 2px dashed #d1d5db;
   display: flex;
@@ -2368,10 +2379,13 @@ body {
   border-radius: 100px;
 }
 
-/* ---- Pose Strip (horizontal scroll) ---- */
+/* ---- Pose Strip (scrollable grid) ---- */
 .sel-poses-section {
-  padding-bottom: 8px;
-  flex-shrink: 0;
+  padding-bottom: 4px;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .sel-poses-title {
@@ -2379,28 +2393,31 @@ body {
   font-weight: 600;
   color: var(--text-muted);
   margin-bottom: 4px;
+  flex-shrink: 0;
 }
 
 .sel-pose-strip {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 6px;
-  overflow-x: auto;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   padding-bottom: 4px;
+  flex: 1;
+  min-height: 0;
 }
 
 .sel-pose-strip::-webkit-scrollbar { display: none; }
 
 .sel-pose-strip .pose-cell-v2 {
-  flex-shrink: 0;
-  width: 56px !important;
+  width: 100% !important;
 }
 
 .sel-pose-strip .pose-cell-v2 .pose-cell-img {
-  width: 56px !important;
-  height: 72px !important;
-  aspect-ratio: auto !important;
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 3 / 4 !important;
   border-radius: 6px;
   overflow: hidden;
   border-width: 2px;
@@ -2415,7 +2432,7 @@ body {
 }
 
 .sel-pose-strip .pose-cell-label {
-  font-size: 8px;
+  font-size: 9px;
   margin-top: 2px;
 }
 
